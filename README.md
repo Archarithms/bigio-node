@@ -1,30 +1,50 @@
-Fast, distributed messaging in Java.
-
 ### BigIO
 
-BigIO is a fast, distributed messaging framework written entirely in Java. The 
-framework can run in a single process or across multiple instances running 
-across a network. Message communication in-VM is extremely fast with upwards of 
-4.6 million messages per second. Communication across multiple instances on a 
-network happens via TCP or UDP connections. Even across the network, the 
-framework can process around 300,000 messages per second (150,000 messages sent 
-and 150,000 messages received).
+BigIO is a fast, distributed messaging framework for a variety of languages. 
+This version of BigIO runs in NodeJS, and is fully interoperable with the
+Java version.
 
-To get started using BigIO, download the BigIO runtime, and deploy your jar
-to the 'components' directory. The API can be used by adding the following to
-your Maven pom.
+## Installation
+Add bigio to your package.json.
 
-```XML
-<dependency>
-    <groupId>io.bigio</groupId>
-    <artifactId>bigio-core</artifactId>
-    <version>1.0.2</version>
-</dependency>
+```
+"dependencies": {
+    "bigio" : "0.1.2"
+"dependencies"
 ```
 
-A zipped runtime package can be downloaded [here](http://search.maven.org/remotecontent?filepath=io/bigio/bigio-runtime/1.0.2/bigio-runtime-1.0.2.zip)
+Then type ```npm install```
 
-For more information, please see the [wiki](https://github.com/Archarithms/bigio/wiki)
-or our [website](http://bigio.io)
+## Usage
 
-The Javadocs can be viewed [here](http://bigio.io/javadoc/)
+Register a listener on a topic:
+
+```
+var bigio = require('bigio');
+
+bigio.initialize(function() {
+    bigio.addListener( {
+        topic: 'HelloWorld',
+        listener: function(message) {
+            console.log('Received a message');
+            console.log(message);
+        }
+    });
+});
+```
+
+Send a message on a topic:
+
+```
+var bigio = require('bigio');
+
+bigio.initialize(function() {
+    setInterval(function() {
+        bigio.send( {
+            topic: 'HelloWorld',
+            message: { content : 'HelloWorld' }
+        });
+    }, 1000);
+});
+```
+
