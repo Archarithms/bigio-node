@@ -10,7 +10,7 @@ Add bigio to your package.json.
 ```
 "dependencies": {
     "bigio" : "0.1.2"
-"dependencies"
+}
 ```
 
 Then type ```npm install```
