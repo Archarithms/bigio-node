@@ -199,29 +199,6 @@ MeMember.prototype.initialize = function() {
                 self.send(message);
             });
         }).listen(this.dataPort, '0.0.0.0');
-
-        /* var gossipClient = net.connect({port: this.gossipPort, host: this.ip}, function () {
-            logger.debug('TCP gossip client connected');
-        });
-        gossipClient.on('end', function () {
-            logger.debug('TCP gossip client disconnected');
-        });
-        gossipClient.on('data', function (data) {
-            var message = GossipDecoder.decode(data);
-            gossipReactor.emit('gossip', message);
-        }); */
-
-        /* var dataClient = net.connect({port: this.dataPort, host: this.ip}, function () {
-            logger.debug('TCP data client connected');
-        });
-        dataClient.on('end', function () {
-            logger.debug('TCP data client disconnected');
-        });
-        dataClient.on('data', function (data) {
-            message = EnvelopeDecoder.decode(data);
-            message.decoded = false;
-            send(message);
-        }); */
     } else {
         var dgram = require('dgram');
 

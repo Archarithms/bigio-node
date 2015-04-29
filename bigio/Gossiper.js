@@ -59,7 +59,7 @@ var me;
 module.exports = {
 
     /**
-     * Star the gossiping task.
+     * Start the gossiping task.
      */
     initialize: function(me) {
         this.me = me;
@@ -108,7 +108,7 @@ module.exports = {
                     var m = MemberHolder.activeMembers[k];
                     memberList.members.push(m.ip + ":" + m.gossipPort + ":" + m.dataPort);
 
-                    if(m == me) {
+                    if(m === me) {
                         m.sequence += 1;
                     }
                     memberList.clock[i] = m.sequence;

@@ -29,7 +29,8 @@
 
 var logger = require('winston');
 var bops = require('bops');
-var msgpack = require('./msgpack');
+var bl = require('bl');
+var msgpack = require('msgpack5')();
 
 /**
  * This is a class for decoding gossip messages.
@@ -48,7 +49,13 @@ module.exports = {
     decode: function(bytes) {
         var message = {};
 
-        var unpacked = msgpack.decode(bytes.slice(2, bytes.length), false);
+        var buff = bl(bytes);
+        buff.consume(2);
+        var unpacked = [];
+
+        while(buff.length > 0) {
+            unpacked.push(msgpack.decode(buff));
+        }
 
         var index = 0;
 

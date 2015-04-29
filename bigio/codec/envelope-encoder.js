@@ -28,7 +28,7 @@
  */
 
 var logger = require('winston');
-var msgpack = require('./msgpack');
+var msgpack = require('msgpack5')();
 var bops = require('bops');
 
 /**
@@ -52,40 +52,41 @@ module.exports = {
 
         if(message.isEncrypted) {
             var toPack = [
-                parseInt(ip[0]),
-                parseInt(ip[1]),
-                parseInt(ip[2]),
-                parseInt(ip[3]),
-                parseInt(keys[1]),
-                parseInt(keys[2]),
-                true,
-                message.key,
-                message.executeTime,
-                message.millisecondsSinceMidnight,
-                message.topic,
-                message.partition,
-                message.className,
-                message.payload
+                msgpack.encode(parseInt(ip[0])),
+                msgpack.encode(parseInt(ip[1])),
+                msgpack.encode(parseInt(ip[2])),
+                msgpack.encode(parseInt(ip[3])),
+                msgpack.encode(parseInt(keys[1])),
+                msgpack.encode(parseInt(keys[2])),
+                msgpack.encode(true),
+                msgpack.encode(message.key),
+                msgpack.encode(message.executeTime),
+                msgpack.encode(message.millisecondsSinceMidnight),
+                msgpack.encode(message.topic),
+                msgpack.encode(message.partition),
+                msgpack.encode(message.className),
+                msgpack.encode(message.payload)
             ];
         } else {
             var toPack = [
-                parseInt(ip[0]),
-                parseInt(ip[1]),
-                parseInt(ip[2]),
-                parseInt(ip[3]),
-                parseInt(keys[1]),
-                parseInt(keys[2]),
-                false,
-                message.executeTime,
-                message.millisecondsSinceMidnight,
-                message.topic,
-                message.partition,
-                message.className,
-                message.payload
+                msgpack.encode(parseInt(ip[0])),
+                msgpack.encode(parseInt(ip[1])),
+                msgpack.encode(parseInt(ip[2])),
+                msgpack.encode(parseInt(ip[3])),
+                msgpack.encode(parseInt(keys[1])),
+                msgpack.encode(parseInt(keys[2])),
+                msgpack.encode(false),
+                msgpack.encode(parseInt(message.executeTime)),
+                msgpack.encode(parseInt(message.millisecondsSinceMidnight)),
+                msgpack.encode(message.topic),
+                msgpack.encode(message.partition),
+                msgpack.encode(message.className),
+                msgpack.encode(message.payload)
             ];
         }
 
-        var buff = msgpack.encode(toPack, false);
+        var buff = bops.join(toPack);
+
         var newBuff = bops.create(buff.length + 2);
         bops.copy(buff, newBuff, 2, 0, buff.length);
         bops.writeUInt16BE(newBuff, buff.length, 0);

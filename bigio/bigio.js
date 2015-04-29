@@ -35,7 +35,7 @@ module.exports = {
     initialize: function (cb) {
         cluster.initialize(function() {
             logger.info("The speaker has arrived");
-            cb();
+            typeof cb === 'function' && cb();
         });
         process.on('SIGINT', function() {
             logger.info("Goodbye");
@@ -52,16 +52,16 @@ module.exports = {
     send: function (obj) {
         cluster.sendMessage(
             obj['topic'],
-            'partition' in obj ? obj['partition'] : '',
+            'partition' in obj ? obj['partition'] : '.*',
             obj['message'],
             'javaclass' in obj ? obj['javaclass'] : '',
-            'offset' in obj ? obj['offset'] : '');
+            'offset' in obj ? obj['offset'] : '0');
     },
 
     addListener: function (obj) {
         cluster.addListener(
             obj['topic'],
-            'partition' in obj ? obj['partition'] : '',
+            'partition' in obj ? obj['partition'] : '.*',
             obj['listener']);
     },
 

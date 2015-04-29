@@ -27,8 +27,9 @@
  * either expressed or implied, of the FreeBSD Project.
  */
 
-var logger = require('winston')
-var msgpack = require('./msgpack')
+var logger = require('winston');
+var msgpack = require('msgpack5')();
+var bops = require('bops');
 
 /**
  * This is a class for encoding generic messages. Generic messages have the
@@ -47,6 +48,10 @@ module.exports = {
      * @throws IOException in case of an error in encoding.
      */
     encode: function(message) {
-        return msgpack.encode(message, false);
+        var arr = [];
+        for(var key in message) {
+            arr.push(msgpack.encode(message[key]));
+        }
+        return bops.join(arr);
     }
 };

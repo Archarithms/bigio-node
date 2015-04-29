@@ -28,7 +28,8 @@
  */
 
 var logger = require('winston');
-var msgpack = require('./msgpack');
+var msgpack = require('msgpack5')();
+//var msgpack = require('./msgpack');
 var bops = require('bops');
 
 /**
@@ -102,7 +103,12 @@ module.exports = {
             ];
         }
 
-        var buff = msgpack.encode(toPack);
+        var arr = [];
+        for(i in toPack) {
+            arr.push(msgpack.encode(toPack[i]));
+        }
+        var buff = bops.join(arr);
+
         var newBuff = bops.create(buff.length + 2);
         bops.copy(buff, newBuff, 2, 0, buff.length);
         bops.writeUInt16BE(newBuff, buff.length, 0);
