@@ -50,7 +50,7 @@ module.exports = {
         var message = {};
 
         var buff = bl(bytes);
-        buff.consume(2);
+        //buff.consume(2);
         var unpacked = [];
 
         while(buff.length > 0) {
@@ -79,18 +79,6 @@ module.exports = {
         message.partition = unpacked[index++];
         message.className = unpacked[index++];
         message.payload = bops.from(unpacked[index], encoding="utf8");
-
-        //logger.info('Decoding payload');
-        //message.payload = msgpack.decode(payload, false);
-        //message.payload = payload;
-
-        /* logger.info("Sender key: " + message.senderKey);
-        logger.info("Encrypted: " + message.isEncrypted);
-        logger.info("Execution Time: " + message.executeTime);
-        logger.info("MS Since Midnight: " + message.millisecondsSinceMidnight);
-        logger.info("Topic: " + message.topic);
-        logger.info("Partition: " + message.partition);
-        */
 
         return message;
     }

@@ -182,23 +182,33 @@ MeMember.prototype.initialize = function() {
             });
         }).listen(this.gossipPort, '0.0.0.0');
 
-        this.dataServer = net.createServer(function(sock) {
+        this.dataServer = net.createServer(function(conn) {
             logger.debug('TCP data client connected');
 
-            sock.on('end', function() {
+            conn.on('end', function() {
                 logger.debug('TCP data client disconnected');
             });
 
-            sock.on('error', function(err) {
+            conn.on('error', function(err) {
 
             });
 
-            sock.on('data', function(data) {
-                var message = EnvelopeDecoder.decode(data);
-                message.decoded = false;
-                self.send(message);
+            conn.on('data', function(data) {
+                var bl = require('bl');
+                var buff = bl(data);
+                var offset = 0;
+
+                while(offset < buff.length) {
+                    var size = buff.get(offset) << 8 | buff.get(offset + 1);
+                    var sliced = buff.slice(offset + 2, offset + 2 + size);
+                    var message = EnvelopeDecoder.decode(sliced);
+                    message.decoded = false;
+                    self.send(message);
+                    offset += size + 2;
+                }
             });
-        }).listen(this.dataPort, '0.0.0.0');
+        });
+        this.dataServer.listen(this.dataPort, '0.0.0.0');
     } else {
         var dgram = require('dgram');
 

@@ -80,7 +80,7 @@ var RemoteMember = function(ip, gossipPort, dataPort, useTCP) {
     var key = undefined;
 
     var gossipSocket;
-    var dataSocket;
+    var dataClient;
 
     var useSSL = parameters.getInstance().getProperty(SSL_PROPERTY, DEFAULT_SSL);
     var useSelfSigned = parameters.getInstance().getProperty(SSL_SELFSIGNED_PROPERTY, DEFAULT_SELFSIGNED);
@@ -171,16 +171,32 @@ RemoteMember.prototype.initialize = function() {
             self.gossipConnected = false;
         });
 
-        this.dataSocket = new net.Socket();
-        this.dataSocket.connect(this.dataPort, this.ip, function () {
+        /*
+        this.dataClient = new net.Socket();
+        this.dataClient.connect(this.dataPort, this.ip, function () {
             logger.debug('TCP data socket connected with remote member ' + self.ip + ':' + self.dataPort);
             self.dataConnected = true;
         });
-        this.dataSocket.on('end', function () {
+        this.dataClient.on('end', function () {
             logger.debug('TCP data socket disconnected');
         });
-        this.dataSocket.on('error', function (err) {
-            self.dataSocket.destroy();
+        this.dataClient.on('error', function (err) {
+            self.dataClient.destroy();
+            self.dataConnected = false;
+            self.status = MemberStatus.Left;
+            MemberHolder.updateMemberStatus(self);
+        });
+        */
+        this.dataClient = net.connect({port: this.dataPort, host: this.ip}, function() {
+            logger.debug('TCP data socket connected with remote member ' + self.ip + ':' + self.dataPort);
+            self.dataConnected = true;
+        });
+        this.dataClient.setNoDelay(true);
+        this.dataClient.on('end', function() {
+            logger.debug('TCP data socket disconnected');
+        });
+        this.dataClient.on('error', function(err) {
+            self.dataClient.destroy();
             self.dataConnected = false;
             self.status = MemberStatus.Left;
             MemberHolder.updateMemberStatus(self);
@@ -191,7 +207,6 @@ RemoteMember.prototype.initialize = function() {
         var self = this;
 
         this.gossipSocket = dgram.createSocket('udp4');
-
         this.gossipSocket.on('listening', function () {
             logger.debug('UDP gossip socket connected with remote member ' + self.ip + ':' + self.gossipPort);
             self.gossipConnected = true;
@@ -203,26 +218,23 @@ RemoteMember.prototype.initialize = function() {
             self.gossipSocket().destroy();
             self.gossipConnected = false;
         });
-
         this.gossipSocket.bind(this.gossipPort, this.ip);
 
-        this.dataSocket = dgram.createSocket('udp4');
-
-        this.dataSocket.on('listening', function () {
+        this.dataClient = dgram.createSocket('udp4');
+        this.dataClient.on('listening', function () {
             logger.debug('UDP data socket connected with remote member ' + self.ip + ':' + self.dataPort);
             self.dataConnected = true;
         });
-        this.dataSocket.on('end', function () {
+        this.dataClient.on('end', function () {
             logger.debug('UDP data server disconnected');
         });
-        this.dataSocket.on('error', function (err) {
-            self.dataSocket().destroy();
+        this.dataClient.on('error', function (err) {
+            self.dataClient.destroy();
             self.dataConnected = false;
             self.status = MemberStatus.Left;
             MemberHolder.updateMemberStatus(self);
         });
-
-        this.dataSocket.bind(this.dataPort, this.ip);
+        this.dataClient.bind(this.dataPort, this.ip);
     }
 
     if(this.publicKey != undefined) {
@@ -270,7 +282,7 @@ RemoteMember.prototype.send = function(message) {
     */
 
     var bytes = EnvelopeEncoder.encode(message);
-    this.dataSocket.write(bytes);
+    this.dataClient.write(bytes);
 };
 
 RemoteMember.prototype.gossip = function(message) {
@@ -284,10 +296,10 @@ RemoteMember.prototype.shutdown = function() {
     logger.debug("Closed remote sockets.");
     if (this.useTCP) {
         this.gossipSocket.end();
-        this.dataSocket.end();
+        this.dataClient.end();
     } else {
         this.gossipSocket.close();
-        this.dataSocket.close();
+        this.dataClient.close();
     }
 };
 
