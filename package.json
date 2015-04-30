@@ -4,8 +4,10 @@
   "description": "Distributed messaging for NodeJS.",
   "homepage": "http://bigio.io",
   "license": "BSD-3-Clause",
-  "name": "Andrew Trimble",
-  "email": "andrew.trimble@archarithms.com",
+  "author": {
+    "name": "Andrew Trimble",
+    "email": "andrew.trimble@archarithms.com"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Archarithms/bigio-node"
