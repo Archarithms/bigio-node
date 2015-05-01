@@ -12,9 +12,9 @@ Note: For interoperability with the Java version of BigIO, bigio-node versions
 ## Installation
 Add bigio to your package.json.
 
-```
+```json
 "dependencies": {
-    "bigio" : "0.1.4"
+    "bigio" : "0.1.5"
 }
 ```
 
@@ -22,9 +22,11 @@ Then type ```npm install```
 
 ## Usage
 
+#### Basic Usage
+
 Register a listener on a topic:
 
-```
+```javascript
 var bigio = require('bigio');
 
 bigio.initialize(function() {
@@ -32,7 +34,7 @@ bigio.initialize(function() {
         topic: 'HelloWorld',
         listener: function(message) {
             console.log('Received a message');
-            console.log(message);
+            console.log(message[0]);
         }
     });
 });
@@ -40,7 +42,7 @@ bigio.initialize(function() {
 
 Send a message on a topic:
 
-```
+```javascript
 var bigio = require('bigio');
 
 bigio.initialize(function() {
@@ -53,3 +55,64 @@ bigio.initialize(function() {
 });
 ```
 
+#### BigIO and JQuery
+
+To use BigIO messages to update a web app, I'd recommend using the awesome project [socket.io](http://socket.io).
+This is necessary since the BigIO messages will be coming to the Node server and not the browser. To bridge this
+gap, we use socket.io.
+
+Here's an example using Express, socket.io, and JQuery:
+
+##### index.js
+```javascript
+var app = require('express');
+var http = require('http').Server(app);
+var io = require('socket.io');
+var $ = require('jquery');
+
+http.listen(3000, function() {
+    console.log('Listening on port 3000');
+});
+
+app.get('/', function(req, res) {
+    res.sendFile(__dirname + '/index.html');
+});
+
+io.on('connection', function(socket) {
+    console.log('User connected.');
+    socket.on('disconnect', function() {
+        console.log('User disconnected.');
+    });
+});
+
+bigio.initialize(function() {
+    bigio.addListener( {
+        topic: 'HelloWorld',
+        listener: function(message) {
+            var messageStr = message[0];
+            io.emit('hello_world', { 'message': messageStr });
+        }
+    });
+});
+```
+
+##### index.html
+```html
+<!doctype html>
+<html>
+  <head>
+    <title>BigIO Web App</title>
+  </head>
+  <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
+  <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+  <script>
+    var socket = io();
+    socket.on('hello_world', function(msg) {
+        $('#messages').append($('<li>' + msg['message'] + '</li>'));
+    });
+  </script>
+  <body>
+    <ul id="messages"></ul>
+  </body>
+</html>
+```
