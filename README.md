@@ -6,8 +6,8 @@ BigIO is a fast, distributed messaging framework for a variety of languages.
 This version of BigIO runs in NodeJS, and is fully interoperable with the
 Java version.
 
-Note: For interoperability with the Java version of BigIO, bigio-node 0.1.4 
-requires Java BigIO version 1.1.2.
+Note: For interoperability with the Java version of BigIO, bigio-node versions 
+0.1.4 and above requires at least Java BigIO version 1.1.2.
 
 ## Installation
 Add bigio to your package.json.
