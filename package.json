@@ -1,6 +1,6 @@
 {
   "name": "bigio",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Distributed messaging for NodeJS.",
   "homepage": "http://bigio.io",
   "license": "BSD-3-Clause",
@@ -8,6 +8,7 @@
     "name": "Andrew Trimble",
     "email": "andrew.trimble@archarithms.com"
   },
+  "keywords" : [ "messaging", "distributed", "messages", "java" ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Archarithms/bigio-node"
