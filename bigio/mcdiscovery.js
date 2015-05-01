@@ -122,18 +122,10 @@ module.exports = {
         client.bind(multicastPort, function () {
             client.addMembership(multicastGroup, nic);
             client.setBroadcast(true);
-            client.setMulticastTTL(4);
+            client.setMulticastTTL(1);
 
             announce();
             cb();
-            /* server.bind(multicastPort, function () {
-                server.addMembership(multicastGroup, nic);
-                server.setBroadcast(true);
-                server.setMulticastTTL(4);
-
-                announce();
-                cb();
-            });*/
         });
     },
 
