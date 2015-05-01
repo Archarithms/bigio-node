@@ -58,7 +58,7 @@ bigio.initialize(function() {
 #### BigIO and JQuery
 
 To use BigIO messages to update a web app, I'd recommend using the awesome project [socket.io](http://socket.io).
-This is necessary since the BigIO messages will be coming to the Node server and not the browser. To bridge this
+This is necessary since the BigIO messages come to the Node.js server and not the browser. To bridge this
 gap, we use socket.io.
 
 Here's an example using Express, socket.io, and JQuery:
@@ -76,13 +76,6 @@ http.listen(3000, function() {
 
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/index.html');
-});
-
-io.on('connection', function(socket) {
-    console.log('User connected.');
-    socket.on('disconnect', function() {
-        console.log('User disconnected.');
-    });
 });
 
 bigio.initialize(function() {
