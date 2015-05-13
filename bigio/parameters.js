@@ -57,13 +57,13 @@ var Singleton = (function () {
                 os = OperatingSystem.WIN_32;
             }
         } else if (osName == "linux") {
-            if (osArch.contains("x64")) {
+            if (osArch == “x64") {
                 os = OperatingSystem.LINUX_64;
             } else {
                 os = OperatingSystem.LINUX_32;
             }
         } else {
-            if (osArch.contains("x64")) {
+            if (osArch == “x64") {
                 os = OperatingSystem.MAC_64;
             } else {
                 os = OperatingSystem.MAC_32;
