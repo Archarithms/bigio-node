@@ -14,7 +14,7 @@ Add bigio to your package.json.
 
 ```json
 "dependencies": {
-    "bigio" : "0.1.5"
+    "bigio" : "0.1.6"
 }
 ```
 
@@ -109,3 +109,8 @@ bigio.initialize(function() {
   </body>
 </html>
 ```
+
+## What's New
+0.1.6 - Bug fixes on Mac and Linux
+0.1.5 - Critical bug fixes
+0.1.4 - Interoperability with Java BigIO
