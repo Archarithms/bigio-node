@@ -50,7 +50,12 @@ module.exports = {
         var unpacked = [];
 
         while(buff.length > 0) {
-            unpacked.push(msgpack.decode(buff));
+            try {
+                unpacked.push(msgpack.decode(buff));
+            } catch(err) {
+                logger.warn('Error decoding message');
+                logger.warn(err);
+            }
         }
 
         return unpacked;
