@@ -84,7 +84,12 @@ module.exports = {
         message.topic = unpacked[index++];
         message.partition = unpacked[index++];
         message.className = unpacked[index++];
-        message.payload = bops.from(unpacked[index], encoding="utf8");
+        try {
+            message.payload = bops.from(unpacked[index], encoding="utf8");
+        } catch(err) {
+            logger.warn('Could not unpack payload');
+            return undefined;
+        }
 
         return message;
     }
