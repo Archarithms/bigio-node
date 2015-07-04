@@ -97,6 +97,7 @@ module.exports = {
         envelope.topic = topic;
         envelope.partition = partition;
         envelope.className = className;
+        envelope.encrypted = false;
 
         var delivery = deliveries[topic];
         if (delivery == undefined) {
