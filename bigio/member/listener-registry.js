@@ -6,7 +6,7 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer. 
+ * list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
@@ -23,7 +23,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * The views and conclusions contained in the software and documentation are those
- * of the authors and should not be interpreted as representing official policies, 
+ * of the authors and should not be interpreted as representing official policies,
  * either expressed or implied, of the FreeBSD Project.
  */
 
@@ -45,14 +45,14 @@ var reactor = new events.EventEmitter();
 
 /**
  * A class for managing listener registrations.
- * 
+ *
  * @author Andy Trimble
  */
 module.exports = {
 
     /**
      * Add a topic interceptor.
-     * 
+     *
      * @param topic a topic.
      * @param interceptor an interceptor.
      */
@@ -65,7 +65,7 @@ module.exports = {
 
     /**
      * Set the current member.
-     * 
+     *
      * @param me the current member.
      */
     initialize: function(me) {
@@ -82,7 +82,7 @@ module.exports = {
 
     /**
      * Add a listener that is located in the same VM as the current member.
-     * 
+     *
      * @param <T> a message type.
      * @param topic a topic.
      * @param partition a partition.
@@ -94,12 +94,12 @@ module.exports = {
 
     /**
      * Remove all local listeners on a given topic.
-     * 
+     *
      * @param topic a topic.
      */
     removeAllLocalListeners: function(topic) {
         var allRegs = map[me];
-        
+
         if(allRegs != undefined) {
             var regs = allRegs[topic];
 
@@ -113,8 +113,8 @@ module.exports = {
     },
 
     /**
-     * Remove topic/partition registrations. 
-     * 
+     * Remove topic/partition registrations.
+     *
      * @param regs a set of registrations.
      */
     removeRegistrations: function(regs) {
@@ -126,8 +126,8 @@ module.exports = {
     },
 
     /**
-     * Get all topic/partition registrations. 
-     * 
+     * Get all topic/partition registrations.
+     *
      * @return the list of all registrations.
      */
     getAllRegistrations: function() {
@@ -145,9 +145,9 @@ module.exports = {
     },
 
     /**
-     * Get all members that have at least one listener registered for a given 
+     * Get all members that have at least one listener registered for a given
      * topic.
-     * 
+     *
      * @param topic a topic.
      * @return all members that have at least one registered listener.
      */
@@ -170,7 +170,7 @@ module.exports = {
 
     /**
      * Register a member for a topic-partition.
-     * 
+     *
      * @param topic a topic.
      * @param partition a partition.
      * @param member a member.
@@ -209,7 +209,7 @@ module.exports = {
 
     /**
      * Send a message.
-     * 
+     *
      * @param envelope a message envelope.
      * @throws IOException in case of a sending error.
      */
@@ -221,7 +221,7 @@ module.exports = {
         }
 
         if(envelope.executeTime > 0) {
-            reactor.setTimeout(function() {
+            setTimeout(function() {
                 reactor.emit(topicutils.getTopicString(envelope.topic, envelope.partition), envelope.message);
             }, envelope.executeTime);
         } else if(envelope.executeTime >= 0) {
