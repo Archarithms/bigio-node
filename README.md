@@ -2,11 +2,11 @@ Checkout the [Java](https://github.com/Archarithms/bigio) or the [Python](https:
 
 ### BigIO
 
-BigIO is a fast, distributed messaging framework for a variety of languages. 
+BigIO is a fast, distributed messaging framework for a variety of languages.
 This version of BigIO runs in NodeJS, and is fully interoperable with the
 Java version.
 
-Note: For interoperability with the Java version of BigIO, bigio-node versions 
+Note: For interoperability with the Java version of BigIO, bigio-node versions
 0.1.4 and above requires at least Java BigIO version 1.1.2.
 
 ## Installation
@@ -14,7 +14,7 @@ Add bigio to your package.json.
 
 ```json
 "dependencies": {
-    "bigio" : "0.1.6"
+    "bigio" : "0.1.8"
 }
 ```
 
@@ -68,6 +68,7 @@ Here's an example using Express, socket.io, and JQuery:
 var app = require('express');
 var http = require('http').Server(app);
 var io = require('socket.io');
+var bigio = require('bigio');
 var $ = require('jquery');
 
 http.listen(3000, function() {
@@ -111,6 +112,12 @@ bigio.initialize(function() {
 ```
 
 ## What's New
+0.1.8 - Better error handling
+
+0.1.7 - Critical bug fix
+
 0.1.6 - Bug fixes on Mac and Linux
+
 0.1.5 - Critical bug fixes
+
 0.1.4 - Interoperability with Java BigIO
