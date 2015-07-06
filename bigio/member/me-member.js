@@ -198,15 +198,37 @@ MeMember.prototype.initialize = function() {
                 var buff = bl(data);
                 var offset = 0;
 
+                if(waitingOn > 0) {
+                    var b = require('bl')();
+                    b.append(chunk);
+                    b.append(buff.slice(0, waitingOn));
+                    var m = EnvelopeDecoder.decode(b.slice());
+                    if(m !== undefined) {
+                        m.decoded = false;
+                        self.send(m);
+                    } else {
+                        logger.error('Bad combined frame');
+                    }
+                    offset = waitingOn;
+                }
+
                 while(offset < buff.length) {
                     var size = buff.get(offset) << 8 | buff.get(offset + 1);
-                    var sliced = buff.slice(offset + 2, offset + 2 + size);
-                    var message = EnvelopeDecoder.decode(sliced);
-                    if(message !== undefined) {
-                        message.decoded = false;
-                        self.send(message);
+                    offset += 2;
+                    if(size + offset > buff.length) {
+                        chunk = buff.slice(offset);
+                        waitingOn = size - (buff.length - offset);
+                        break;
+                    } else {
+                        var sliced = buff.slice(offset, offset + size);
+                        var message = EnvelopeDecoder.decode(sliced);
+                        if(message !== undefined) {
+                            message.decoded = false;
+                            self.send(message);
+                        }
+                        offset += size;
+                        waitingOn = 0;
                     }
-                    offset += size + 2;
                 }
             });
         });
