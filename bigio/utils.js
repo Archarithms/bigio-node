@@ -31,7 +31,7 @@
 var logger = require('winston');
 var net = require('net');
 var os = require('os');
-var parameters = require('./parameters');
+var config = require('./config');
 
 var OperatingSystem = {
     WIN_64 : 0, WIN_32 : 1, LINUX_64 : 2, LINUX_32 : 3, MAC_64 : 4, MAC_32 : 5
@@ -107,7 +107,7 @@ module.exports = {
 
     getIp: function(cb) {
         if(ip == undefined) {
-            var nic = parameters.getInstance().getProperty(NETWORK_INTERFACE_PROPERTY);
+            var nic = config.getInstance().getProperty(NETWORK_INTERFACE_PROPERTY);
             if(nic == undefined) {
                 var interfaces = os.networkInterfaces();
                 var match;

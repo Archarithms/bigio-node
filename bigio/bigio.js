@@ -47,7 +47,7 @@ var roundRobinIndex = {}; // type Map<String, Integer>
 
 var shuttingDown = false;
 
-var parameters = require('./parameters');
+var config = require('./config');
 var utils = require('./utils');
 var MeMember = require('./member/me-member');
 var RemoteMember = require('./member/remote-member');
@@ -78,9 +78,9 @@ var DeliveryType = {
 module.exports = {
 
     initialize: function (cb) {
-        var protocol = parameters.getInstance().getProperty(PROTOCOL_PROPERTY, DEFAULT_PROTOCOL);
-        var gossipPort = parameters.getInstance().getProperty(GOSSIP_PORT_PROPERTY);
-        var dataPort = parameters.getInstance().getProperty(DATA_PORT_PROPERTY);
+        var protocol = config.getInstance().getProperty(PROTOCOL_PROPERTY, DEFAULT_PROTOCOL);
+        var gossipPort = config.getInstance().getProperty(GOSSIP_PORT_PROPERTY);
+        var dataPort = config.getInstance().getProperty(DATA_PORT_PROPERTY);
         var address;
 
         if (gossipPort == null) {
@@ -294,7 +294,7 @@ var handleGossipMessage = function(message) {
         var m = MemberHolder.members[key];
 
         if(m == undefined) {
-            var protocol = parameters.getInstance().getProperty(PROTOCOL_PROPERTY, DEFAULT_PROTOCOL);
+            var protocol = config.getInstance().getProperty(PROTOCOL_PROPERTY, DEFAULT_PROTOCOL);
             if("udp" == protocol) {
                 logger.debug("Discovered new UDP member through gossip: " + message.ip + ":" + message.gossipPort + ":" + message.dataPort);
                 m = new RemoteMember(message.ip, message.gossipPort, message.dataPort, false);

@@ -37,7 +37,7 @@ var logger = new (winston.Logger)({
 
 var memberHolder = require('./member-holder');
 var MemberStatus = require('./member-status');
-var parameters = require('../parameters');
+var config = require('../config');
 var gossipCodec = require('../codec/gossip-codec');
 var envelopeCodec = require('../codec/envelope-codec');
 
@@ -70,9 +70,9 @@ var RemoteMember = function(ip, gossipPort, dataPort, useTCP) {
     var DEFAULT_KEYFILE = "conf/keyfile.pem";
     var SSL_KEYPASSWORD_PROPERTY = "io.bigio.ssl.keyPassword";
 
-    var maxRetry = parameters.getInstance().getProperty(MAX_RETRY_COUNT_PROPERTY, DEFAULT_MAX_RETRY_COUNT);
-    var retryInterval = parameters.getInstance().getProperty(RETRY_INTERVAL_PROPERTY, DEFAULT_RETRY_INTERVAL);
-    var timeout = parameters.getInstance().getProperty(CONNECTION_TIMEOUT_PROPERTY, DEFAULT_CONNECTION_TIMEOUT);
+    var maxRetry = config.getInstance().getProperty(MAX_RETRY_COUNT_PROPERTY, DEFAULT_MAX_RETRY_COUNT);
+    var retryInterval = config.getInstance().getProperty(RETRY_INTERVAL_PROPERTY, DEFAULT_RETRY_INTERVAL);
+    var timeout = config.getInstance().getProperty(CONNECTION_TIMEOUT_PROPERTY, DEFAULT_CONNECTION_TIMEOUT);
 
     var cipher = undefined;
     var symmetricCipher = undefined;
@@ -82,11 +82,11 @@ var RemoteMember = function(ip, gossipPort, dataPort, useTCP) {
     var gossipSocket;
     var dataClient;
 
-    var useSSL = parameters.getInstance().getProperty(SSL_PROPERTY, DEFAULT_SSL);
-    var useSelfSigned = parameters.getInstance().getProperty(SSL_SELFSIGNED_PROPERTY, DEFAULT_SELFSIGNED);
-    var certChainFile = parameters.getInstance().getProperty(SSL_CERTCHAINFILE_PROPERTY, DEFAULT_CERTCHAINFILE);
-    var keyFile = parameters.getInstance().getProperty(SSL_KEYFILE_PROPERTY, DEFAULT_KEYFILE);
-    var keyPassword = parameters.getInstance().getProperty(SSL_KEYPASSWORD_PROPERTY);
+    var useSSL = config.getInstance().getProperty(SSL_PROPERTY, DEFAULT_SSL);
+    var useSelfSigned = config.getInstance().getProperty(SSL_SELFSIGNED_PROPERTY, DEFAULT_SELFSIGNED);
+    var certChainFile = config.getInstance().getProperty(SSL_CERTCHAINFILE_PROPERTY, DEFAULT_CERTCHAINFILE);
+    var keyFile = config.getInstance().getProperty(SSL_KEYFILE_PROPERTY, DEFAULT_KEYFILE);
+    var keyPassword = config.getInstance().getProperty(SSL_KEYPASSWORD_PROPERTY);
 
     var gossipConnected = false;
     var dataConnected = false;

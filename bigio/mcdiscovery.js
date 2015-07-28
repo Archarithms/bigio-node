@@ -34,7 +34,7 @@ var logger = new (winston.Logger)({
         //new (winston.transports.File)({ filename: 'somefile.log' })
     ]
 });
-var parameters = require('./parameters');
+var config = require('./config');
 var gossipCodec = require('./codec/gossip-codec');
 var holder = require('./member/member-holder');
 var MemberStatus = require('./member/member-status');
@@ -51,11 +51,11 @@ var PROTOCOL_PROPERTY = "io.bigio.protocol";
 var DEFAULT_PROTOCOL = "tcp";
 var NETWORK_INTERFACE_PROPERTY = "io.bigio.network";
 
-var enabled = parameters.getInstance().getProperty(MULTICAST_ENABLED_PROPERTY, "true");
-var multicastGroup = parameters.getInstance().getProperty(MULTICAST_GROUP_PROPERTY, DEFAULT_MULTICAST_GROUP);
-var multicastPort = parameters.getInstance().getProperty(MULTICAST_PORT_PROPERTY, DEFAULT_MULTICAST_PORT);
-var protocol = parameters.getInstance().getProperty(PROTOCOL_PROPERTY, DEFAULT_PROTOCOL);
-var nic = parameters.getInstance().getProperty(NETWORK_INTERFACE_PROPERTY);
+var enabled = config.getInstance().getProperty(MULTICAST_ENABLED_PROPERTY, "true");
+var multicastGroup = config.getInstance().getProperty(MULTICAST_GROUP_PROPERTY, DEFAULT_MULTICAST_GROUP);
+var multicastPort = config.getInstance().getProperty(MULTICAST_PORT_PROPERTY, DEFAULT_MULTICAST_PORT);
+var protocol = config.getInstance().getProperty(PROTOCOL_PROPERTY, DEFAULT_PROTOCOL);
+var nic = config.getInstance().getProperty(NETWORK_INTERFACE_PROPERTY);
 
 var me;
 var server;

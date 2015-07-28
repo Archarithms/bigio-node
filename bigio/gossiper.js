@@ -37,7 +37,7 @@ var logger = new (winston.Logger)({
 
 var MemberHolder = require('./member/member-holder');
 var registry = require('./member/listener-registry');
-var parameters = require('./parameters');
+var config = require('./config');
 var utils = require('./utils');
 
 var GOSSIP_INTERVAL_PROPERTY = "io.bigio.gossip.interval";
@@ -45,8 +45,8 @@ var CLEANUP_INTERVAL_PROPERTY = "io.bigio.gossip.cleanup";
 var DEFAULT_GOSSIP_INTERVAL = 250;
 var DEFAULT_CLEANUP_INTERVAL = 10000;
 
-var gossipInterval = parameters.getInstance().getProperty(GOSSIP_INTERVAL_PROPERTY, DEFAULT_GOSSIP_INTERVAL);
-var cleanupInterval = parameters.getInstance().getProperty(CLEANUP_INTERVAL_PROPERTY, DEFAULT_CLEANUP_INTERVAL);
+var gossipInterval = config.getInstance().getProperty(GOSSIP_INTERVAL_PROPERTY, DEFAULT_GOSSIP_INTERVAL);
+var cleanupInterval = config.getInstance().getProperty(CLEANUP_INTERVAL_PROPERTY, DEFAULT_CLEANUP_INTERVAL);
 
 var me;
 

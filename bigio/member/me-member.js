@@ -36,7 +36,7 @@ var logger = new (winston.Logger)({
 });
 var events = require('events');
 var MemberStatus = require('./member-status');
-var parameters = require('../parameters');
+var config = require('../config');
 var registry = require('./listener-registry');
 var envelopeCodec = require('../codec/envelope-codec');
 var gossipCodec = require('../codec/gossip-codec');
@@ -64,12 +64,12 @@ var symmetricCipher = undefined;
 var rsaCipher = undefined;
 var keyPair = undefined;
 
-var useEncryption = parameters.getInstance().getProperty(ENCRYPTION_PROPERTY, DEFAULT_ENCRYPTION);
-var useSSL = parameters.getInstance().getProperty(SSL_PROPERTY, DEFAULT_SSL);
-var useSelfSigned = parameters.getInstance().getProperty(SSL_SELFSIGNED_PROPERTY, DEFAULT_SELFSIGNED);
-var certChainFile = parameters.getInstance().getProperty(SSL_CERTCHAINFILE_PROPERTY, DEFAULT_CERTCHAINFILE);
-var keyFile = parameters.getInstance().getProperty(SSL_KEYFILE_PROPERTY, DEFAULT_KEYFILE);
-var keyPassword = parameters.getInstance().getProperty(SSL_KEYPASSWORD_PROPERTY);
+var useEncryption = config.getInstance().getProperty(ENCRYPTION_PROPERTY, DEFAULT_ENCRYPTION);
+var useSSL = config.getInstance().getProperty(SSL_PROPERTY, DEFAULT_SSL);
+var useSelfSigned = config.getInstance().getProperty(SSL_SELFSIGNED_PROPERTY, DEFAULT_SELFSIGNED);
+var certChainFile = config.getInstance().getProperty(SSL_CERTCHAINFILE_PROPERTY, DEFAULT_CERTCHAINFILE);
+var keyFile = config.getInstance().getProperty(SSL_KEYFILE_PROPERTY, DEFAULT_KEYFILE);
+var keyPassword = config.getInstance().getProperty(SSL_KEYPASSWORD_PROPERTY);
 
 var gossipServer;
 var dataServer;
