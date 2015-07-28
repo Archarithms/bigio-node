@@ -35,7 +35,7 @@ var logger = new (winston.Logger)({
     ]
 });
 var events = require('events');
-var utils = require('../util/utils');
+var utils = require('../utils');
 
 var me;
 

@@ -35,12 +35,11 @@ var logger = new (winston.Logger)({
     ]
 });
 var parameters = require('./parameters');
-var GossipMessage = require('./gossip-message');
 var gossipCodec = require('./codec/gossip-codec');
 var holder = require('./member/member-holder');
 var MemberStatus = require('./member/member-status');
 var RemoteMember = require('./member/remote-member');
-var utils = require('./util/utils');
+var utils = require('./utils');
 var dgram = require('dgram');
 
 var MULTICAST_ENABLED_PROPERTY = "io.bigio.multicast.enabled";
@@ -136,7 +135,10 @@ module.exports = {
 
 var announce = function() {
     logger.info("Announcing");
-    var message = new GossipMessage();
+    var message = {};
+    message.clock = [];
+    message.tags = {};
+
     message.ip = me.ip;
     message.gossipPort = me.gossipPort;
     message.dataPort = me.dataPort;

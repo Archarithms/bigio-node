@@ -27,38 +27,53 @@
  * either expressed or implied, of the FreeBSD Project.
  */
 
- var PROTOCOL_PROPERTY = "io.bigio.protocol";
- var DEFAULT_PROTOCOL = "tcp";
- var GOSSIP_PORT_PROPERTY = "io.bigio.port.gossip";
- var DATA_PORT_PROPERTY = "io.bigio.port.data";
+var PROTOCOL_PROPERTY = "io.bigio.protocol";
+var DEFAULT_PROTOCOL = "tcp";
+var GOSSIP_PORT_PROPERTY = "io.bigio.port.gossip";
+var DATA_PORT_PROPERTY = "io.bigio.port.data";
 
- var winston = require('winston')
- var logger = new (winston.Logger)({
-     transports: [
-         new (winston.transports.Console)({ level: 'debug' })
-         //new (winston.transports.File)({ filename: 'somefile.log' })
-     ]
- });
+var winston = require('winston')
+var logger = new (winston.Logger)({
+    transports: [
+        new (winston.transports.Console)({ level: 'debug' })
+        //new (winston.transports.File)({ filename: 'somefile.log' })
+    ]
+});
 
- var me; // type MeMember
+var me; // type MeMember
 
- var deliveries = {}; // type Map<String, DeliveryType>
- var roundRobinIndex = {}; // type Map<String, Integer>
+var deliveries = {}; // type Map<String, DeliveryType>
+var roundRobinIndex = {}; // type Map<String, Integer>
 
- var shuttingDown = false;
+var shuttingDown = false;
 
- var parameters = require('./parameters');
- var DeliveryType = require('./delivery-type');
- var networkUtil = require('./util/network-util');
- var utils = require('./util/utils');
- var MeMember = require('./member/me-member');
- var RemoteMember = require('./member/remote-member');
- var MemberStatus = require('./member/member-status');
- var MemberHolder = require('./member/member-holder');
- var discovery = require('./mcdiscovery');
- var registry = require('./member/listener-registry');
- var gossiper = require('./gossiper');
- var genericCodec = require('./codec/generic-codec');
+var parameters = require('./parameters');
+var utils = require('./utils');
+var MeMember = require('./member/me-member');
+var RemoteMember = require('./member/remote-member');
+var MemberStatus = require('./member/member-status');
+var MemberHolder = require('./member/member-holder');
+var discovery = require('./mcdiscovery');
+var registry = require('./member/listener-registry');
+var gossiper = require('./gossiper');
+var genericCodec = require('./codec/generic-codec');
+
+var DeliveryType = {
+    /**
+     * Broadcast messages to all known receives.
+     */
+    BROADCAST : 0,
+
+    /**
+     * Send messages to the set of known receives in a round-robin manner.
+     */
+    ROUND_ROBIN : 1,
+
+    /**
+     * Send messages to randomly selected receivers.
+     */
+    RANDOM : 2
+}
 
 module.exports = {
 
@@ -70,16 +85,16 @@ module.exports = {
 
         if (gossipPort == null) {
             logger.debug("Finding a random port for gossiping.");
-            gossipPort = networkUtil.getFreePort(function (err, port) {
+            gossipPort = utils.getFreePort(function (err, port) {
                 gossipPort = port;
                 logger.debug("Using port " + gossipPort + " for gossiping.");
 
                 if (dataPort == null) {
                     logger.debug("Finding a random port for data.");
-                    dataPort = networkUtil.getFreePort(function (err, port) {
+                    dataPort = utils.getFreePort(function (err, port) {
                         dataPort = port;
                         logger.debug("Using port " + dataPort + " for data.");
-                        networkUtil.getIp(function (err, ip) {
+                        utils.getIp(function (err, ip) {
                             address = ip;
                             logger.debug("Greetings. I am " + address + ":" + gossipPort + ":" + dataPort);
                             connect(protocol, address, gossipPort, dataPort, cb);
@@ -233,7 +248,7 @@ module.exports = {
             roundRobinIndex[topic] = 0;
         }
     }
-};
+}
 
 var connect = function(protocol, address, gossipPort, dataPort, cb) {
 
@@ -261,7 +276,7 @@ var connect = function(protocol, address, gossipPort, dataPort, cb) {
             cb();
         });
     });
-};
+}
 
 var handleGossipMessage = function(message) {
     if(shuttingDown) {
@@ -352,4 +367,4 @@ var handleGossipMessage = function(message) {
             m.tags.push(tag);
         }
     }
-};
+}

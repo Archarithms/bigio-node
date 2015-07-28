@@ -31,8 +31,11 @@
 var logger = require('winston');
 var net = require('net');
 var os = require('os');
-var parameters = require('./../parameters')
-var OperatingSystem = require('./operating-system')
+var parameters = require('./parameters');
+
+var OperatingSystem = {
+    WIN_64 : 0, WIN_32 : 1, LINUX_64 : 2, LINUX_32 : 3, MAC_64 : 4, MAC_32 : 5
+};
 
 var NETWORK_INTERFACE_PROPERTY = "io.bigio.network";
 
@@ -46,7 +49,62 @@ var END_PORT = 65536;
 var NUM_CANDIDATES = END_PORT - START_PORT + 1;
 var port;
 
+/**
+ * A utility class for working with topics and partitions.
+ *
+ * @author Andy Trimble
+ */
 module.exports = {
+
+    ALL_PARTITIONS: ".*",
+
+    getTopicString: function(topic, partition) {
+        return topic + "(" + partition + ")";
+    },
+
+    getNotifyTopicString: function(topic, partition) {
+        return topic + partition;
+    },
+
+    getTopic: function(topicPartition) {
+        if(String(topicPartition).indexOf('(') > -1) {
+            return topicPartition.split("\\(")[0];
+        }
+        return topicPartition;
+    },
+
+    getPartition: function(topicPartition) {
+        if(String(topicPartition).indexOf('(') > -1) {
+            var spl = topicPartition.split("\\(");
+            if (spl.length > 1) {
+                return spl[1];
+            }
+        }
+
+        return this.ALL_PARTITIONS;
+    },
+
+    getMillisecondsSinceMidnight: function() {
+        var now = new Date(),
+        then = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            0,0,0);
+        var diff = now.getTime() - then.getTime();
+
+        return diff;
+    },
+
+    getKey: function(args) {
+        if(args.member) {
+            return String(args.member.ip) + ':' + String(args.member.gossipPort) + ':' + String(args.member.dataPort);
+        } else if(args.ip && args.gossipPort && args.dataPort) {
+            return String(args.ip) + ':' + String(args.gossipPort) + ':' + String(args.dataPort);
+        }
+        return '';
+    },
+
     getIp: function(cb) {
         if(ip == undefined) {
             var nic = parameters.getInstance().getProperty(NETWORK_INTERFACE_PROPERTY);
@@ -54,7 +112,7 @@ module.exports = {
                 var interfaces = os.networkInterfaces();
                 var match;
 
-                switch(parameters.getInstance().currentOS()) {
+                switch(currentOS()) {
                     case OperatingSystem.WIN_64:
                     case OperatingSystem.WIN_32:
                         match = "Loopback";
@@ -105,4 +163,33 @@ var nextPort = function(cb) {
         port = Math.floor(Math.random() * NUM_CANDIDATES + START_PORT);
         nextPort(cb);
     })
+}
+
+var currentOS = function() {
+    var osName = os.platform();
+    var osArch = os.arch();
+
+    var ret;
+
+    if (osName == "win32") {
+        if (osArch == "x64") {
+            ret = OperatingSystem.WIN_64;
+        } else {
+            ret = OperatingSystem.WIN_32;
+        }
+    } else if (osName == "linux") {
+        if (osArch == "x64") {
+            ret = OperatingSystem.LINUX_64;
+        } else {
+            ret = OperatingSystem.LINUX_32;
+        }
+    } else {
+        if (osArch == "x64") {
+            ret = OperatingSystem.MAC_64;
+        } else {
+            ret = OperatingSystem.MAC_32;
+        }
+    }
+
+    return ret;
 }

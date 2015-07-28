@@ -35,8 +35,6 @@ var properties;
 var fileSystem;
 var configDir;
 var os;
-var operatingSystem = require('os');
-var OperatingSystem = require('./util/operating-system')
 
 var properties = {};
 
@@ -46,29 +44,6 @@ var Singleton = (function () {
     function createInstance() {
 
         MAX_DEPTH = 10;
-
-        var osName = operatingSystem.platform();
-        var osArch = operatingSystem.arch();
-
-        if (osName == "win32") {
-            if (osArch == "x64") {
-                os = OperatingSystem.WIN_64;
-            } else {
-                os = OperatingSystem.WIN_32;
-            }
-        } else if (osName == "linux") {
-            if (osArch == "x64") {
-                os = OperatingSystem.LINUX_64;
-            } else {
-                os = OperatingSystem.LINUX_32;
-            }
-        } else {
-            if (osArch == "x64") {
-                os = OperatingSystem.MAC_64;
-            } else {
-                os = OperatingSystem.MAC_32;
-            }
-        }
 
         // TODO: Load configuration files here
 
@@ -87,10 +62,6 @@ var Singleton = (function () {
 
             setProperty: function (name, value) {
                 properties[name] = value;
-            },
-
-            currentOS: function () {
-                return os;
             }
         };
     };

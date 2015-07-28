@@ -38,8 +38,7 @@ var logger = new (winston.Logger)({
 var MemberHolder = require('./member/member-holder');
 var registry = require('./member/listener-registry');
 var parameters = require('./parameters');
-var GossipMessage = require('./gossip-message');
-var utils = require('./util/utils');
+var utils = require('./utils');
 
 var GOSSIP_INTERVAL_PROPERTY = "io.bigio.gossip.interval";
 var CLEANUP_INTERVAL_PROPERTY = "io.bigio.gossip.cleanup";
@@ -92,7 +91,7 @@ module.exports = {
             }
 
             if (member != undefined) {
-                var memberList = new GossipMessage();
+                var memberList = {};
                 memberList.ip = me.ip;
                 memberList.gossipPort = me.gossipPort;
                 memberList.dataPort = me.dataPort;
@@ -101,6 +100,7 @@ module.exports = {
                 memberList.tags = me.tags;
                 memberList.members = [];
                 memberList.eventListeners = {};
+                memberList.clock = [];
 
                 for(var i = 0; i < activeMemberNum; ++i) {
                     var k = activeKeys[i];

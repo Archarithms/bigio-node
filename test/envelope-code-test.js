@@ -1,5 +1,5 @@
 var assert = require('assert');
-var utils = require('../bigio/util/utils');
+var utils = require('../bigio/utils');
 var codec = require('../bigio/codec/envelope-codec');
 var bops = require('bops');
 

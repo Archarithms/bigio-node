@@ -1,6 +1,6 @@
 var chai = require('chai');
 var assert = chai.assert;
-var utils = require('../bigio/util/utils');
+var utils = require('../bigio/utils');
 var codec = require('../bigio/codec/generic-codec');
 var bops = require('bops');
 
