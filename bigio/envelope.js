@@ -6,7 +6,7 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer. 
+ * list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
@@ -23,27 +23,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * The views and conclusions contained in the software and documentation are those
- * of the authors and should not be interpreted as representing official policies, 
+ * of the authors and should not be interpreted as representing official policies,
  * either expressed or implied, of the FreeBSD Project.
  */
 
 
 /**
  * A message envelope containing the BigIO metadata for all messages.
- * 
+ *
  * @author Andy Trimble
  * @param <T> the wrapped message type
  */
 var Envelope = function() {
 
 };
-    
+
 Envelope.prototype.senderKey = '';
 Envelope.prototype.executeTime = 0;
 Envelope.prototype.millisecondsSinceMidnight = 0;
 Envelope.prototype.topic = '';
 Envelope.prototype.partition = '';
-Envelope.prototype.className = '';
+Envelope.prototype.type = '';
 Envelope.prototype.payload = '';
 Envelope.prototype.key = '';
 Envelope.prototype.encrypted = false;

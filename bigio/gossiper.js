@@ -91,7 +91,6 @@ module.exports = {
                 member = chosenMember;
             }
 
-
             if (member != undefined) {
                 var memberList = new GossipMessage();
                 memberList.ip = me.ip;

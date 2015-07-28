@@ -83,7 +83,7 @@ module.exports = {
         message.millisecondsSinceMidnight = unpacked[index++];
         message.topic = unpacked[index++];
         message.partition = unpacked[index++];
-        message.className = unpacked[index++];
+        message.type = unpacked[index++];
         try {
             message.payload = bops.from(unpacked[index], encoding="utf8");
         } catch(err) {
@@ -120,7 +120,7 @@ module.exports = {
                 msgpack.encode(message.millisecondsSinceMidnight),
                 msgpack.encode(message.topic),
                 msgpack.encode(message.partition),
-                msgpack.encode(message.className),
+                msgpack.encode(message.type),
                 msgpack.encode(message.payload)
             ];
         } else {
@@ -136,7 +136,7 @@ module.exports = {
                 msgpack.encode(parseInt(message.millisecondsSinceMidnight)),
                 msgpack.encode(message.topic),
                 msgpack.encode(message.partition),
-                msgpack.encode(message.className),
+                msgpack.encode(message.type),
                 msgpack.encode(message.payload)
             ];
         }

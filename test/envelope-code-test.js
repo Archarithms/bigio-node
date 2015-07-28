@@ -12,7 +12,7 @@ describe('envelope-codec', function() {
         envelope.topic = 'TestTopic';
         envelope.partition = 'TestPartition';
         envelope.isEncrypted = false;
-        envelope.className = 'class';
+        envelope.type = 'class';
         envelope.payload = bops.from('');
 
         var encoded = codec.encode(envelope);
@@ -24,6 +24,6 @@ describe('envelope-codec', function() {
         assert.equal(envelope.topic, decoded.topic);
         assert.equal(envelope.partition, decoded.partition);
         assert.equal(envelope.isEncrypted, decoded.isEncrypted);
-        assert.equal(envelope.className, decoded.className);
+        assert.equal(envelope.type, decoded.type);
     });
 });
