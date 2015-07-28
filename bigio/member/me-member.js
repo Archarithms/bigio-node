@@ -37,49 +37,48 @@ var logger = new (winston.Logger)({
 var events = require('events');
 var MemberStatus = require('./member-status');
 var parameters = require('../parameters');
-var ListenerRegistry = require('./listener-registry');
-var EnvelopeDecoder = require('../codec/envelope-decoder');
-var GossipDecoder = require('../codec/gossip-decoder');
-var GenericDecoder = require('../codec/generic-decoder');
+var registry = require('./listener-registry');
+var envelopeCodec = require('../codec/envelope-codec');
+var gossipCodec = require('../codec/gossip-codec');
+var genericCodec = require('../codec/generic-codec');
 
 var gossipReactor = new events.EventEmitter();
 
-var MeMember = function(ip, gossipPort, dataPort, useTCP) {
+var SSL_PROPERTY = "io.bigio.ssl";
+var DEFAULT_SSL = false;
+var SSL_SELFSIGNED_PROPERTY = "io.bigio.ssl.selfSigned";
+var DEFAULT_SELFSIGNED = true;
+var SSL_CERTCHAINFILE_PROPERTY = "io.bigio.ssl.certChainFile";
+var DEFAULT_CERTCHAINFILE = "conf/certChain.pem";
+var SSL_KEYFILE_PROPERTY = "io.bigio.ssl.keyFile";
+var DEFAULT_KEYFILE = "conf/keyfile.pem";
+var SSL_KEYPASSWORD_PROPERTY = "io.bigio.ssl.keyPassword";
 
+var ENCRYPTION_PROPERTY = "io.bigio.encryption";
+var DEFAULT_ENCRYPTION = false;
+
+var GOSSIP_TOPIC = "__gossiper";
+var DECODE_TOPIC = "__decoder";
+
+var symmetricCipher = undefined;
+var rsaCipher = undefined;
+var keyPair = undefined;
+
+var useEncryption = parameters.getInstance().getProperty(ENCRYPTION_PROPERTY, DEFAULT_ENCRYPTION);
+var useSSL = parameters.getInstance().getProperty(SSL_PROPERTY, DEFAULT_SSL);
+var useSelfSigned = parameters.getInstance().getProperty(SSL_SELFSIGNED_PROPERTY, DEFAULT_SELFSIGNED);
+var certChainFile = parameters.getInstance().getProperty(SSL_CERTCHAINFILE_PROPERTY, DEFAULT_CERTCHAINFILE);
+var keyFile = parameters.getInstance().getProperty(SSL_KEYFILE_PROPERTY, DEFAULT_KEYFILE);
+var keyPassword = parameters.getInstance().getProperty(SSL_KEYPASSWORD_PROPERTY);
+
+var gossipServer;
+var dataServer;
+
+var MeMember = function(ip, gossipPort, dataPort, useTCP) {
     this.ip = ip;
     this.dataPort = dataPort;
     this.gossipPort = gossipPort;
     this.useTCP = useTCP;
-
-    var SSL_PROPERTY = "io.bigio.ssl";
-    var DEFAULT_SSL = false;
-    var SSL_SELFSIGNED_PROPERTY = "io.bigio.ssl.selfSigned";
-    var DEFAULT_SELFSIGNED = true;
-    var SSL_CERTCHAINFILE_PROPERTY = "io.bigio.ssl.certChainFile";
-    var DEFAULT_CERTCHAINFILE = "conf/certChain.pem";
-    var SSL_KEYFILE_PROPERTY = "io.bigio.ssl.keyFile";
-    var DEFAULT_KEYFILE = "conf/keyfile.pem";
-    var SSL_KEYPASSWORD_PROPERTY = "io.bigio.ssl.keyPassword";
-
-    var ENCRYPTION_PROPERTY = "io.bigio.encryption";
-    var DEFAULT_ENCRYPTION = false;
-
-    var GOSSIP_TOPIC = "__gossiper";
-    var DECODE_TOPIC = "__decoder";
-
-    var symmetricCipher = undefined;
-    var rsaCipher = undefined;
-    var keyPair = undefined;
-
-    var useEncryption = parameters.getInstance().getProperty(ENCRYPTION_PROPERTY, DEFAULT_ENCRYPTION);
-    var useSSL = parameters.getInstance().getProperty(SSL_PROPERTY, DEFAULT_SSL);
-    var useSelfSigned = parameters.getInstance().getProperty(SSL_SELFSIGNED_PROPERTY, DEFAULT_SELFSIGNED);
-    var certChainFile = parameters.getInstance().getProperty(SSL_CERTCHAINFILE_PROPERTY, DEFAULT_CERTCHAINFILE);
-    var keyFile = parameters.getInstance().getProperty(SSL_KEYFILE_PROPERTY, DEFAULT_KEYFILE);
-    var keyPassword = parameters.getInstance().getProperty(SSL_KEYPASSWORD_PROPERTY);
-
-    var gossipServer;
-    var dataServer;
 };
 
 MeMember.prototype.tags = {};
@@ -121,51 +120,41 @@ MeMember.prototype.toString = function() {
 MeMember.prototype.equals = function(obj) {
     var them = obj;
 
-    return them != undefined
-        && them.ip == this.ip
-        && them.gossipPort == this.gossipPort
-        && them.dataPort == this.dataPort;
+    return them !== undefined
+        && them.ip === this.ip
+        && them.gossipPort === this.gossipPort
+        && them.dataPort === this.dataPort;
 };
 
-MeMember.prototype.shutdown = function() {
-    this.gossipServer.close();
-    this.dataServer.close();
+MeMember.prototype.gossip = function(message) {
+
 };
 
-MeMember.prototype.initialize = function() {
+MeMember.prototype.shutdown = function(cb) {
+    /* gossipServer.close(function(err) {
+        console.log(err);
+        dataServer.close(function(err) {
+            console.log(err);
+            typeof cb === 'function' && cb();
+        });
+    }); */
+    typeof cb === 'function' && cb();
+};
+
+MeMember.prototype.initialize = function(cb) {
     logger.debug("Initializing gossip server on " + this.ip + ":" + this.gossipPort);
+
+    var gossipListening = false;
+    var dataListening = false;
 
     if (this.useSSL) {
         logger.info("Using SSL/TLS.");
-
-        /* if(useSelfSigned) {
-         logger.warn("Using self signed certificate. Only use this for testing.");
-         SelfSignedCertificate ssc;
-         try {
-         ssc = new SelfSignedCertificate();
-         sslContext = SslContext.newServerContext(ssc.certificate(), ssc.privateKey());
-         } catch (CertificateException ex) {
-         logger.error("Certificate error.", ex);
-         } catch (SSLException ex) {
-         logger.error("SSL error.", ex);
-         }
-         } else {
-         try {
-         if("".equals(keyPassword) || keyPassword == null) {
-         sslContext = SslContext.newServerContext(SslProvider.JDK, new File(certChainFile), new File(keyFile));
-         } else {
-         sslContext = SslContext.newServerContext(SslProvider.JDK, new File(certChainFile), new File(keyFile), keyPassword);
-         }
-         } catch (SSLException ex) {
-         logger.error("SSL error.", ex);
-         }
-         } */
     } else if(this.useTCP) {
         var net = require('net');
 
         var self = this;
 
-        this.gossipServer = net.createServer(function(sock) {
+        gossipServer = net.createServer(function(sock) {
             logger.debug('TCP gossip server connected');
 
             sock.on('end', function() {
@@ -177,13 +166,23 @@ MeMember.prototype.initialize = function() {
             });
 
             sock.on('data', function(data) {
-                var message = GossipDecoder.decode(data);
+                var message = gossipCodec.decode(data);
                 gossipReactor.emit('gossip', message);
             });
-        }).listen(this.gossipPort, '0.0.0.0');
+        });
 
-        this.dataServer = net.createServer(function(conn) {
+        gossipServer.listen(this.gossipPort, '0.0.0.0', function() {
+            logger.info('Gossip server listening');
+            if(dataListening) {
+                cb();
+            } else {
+                gossipListening = true;
+            }
+        });
+
+        dataServer = net.createServer(function(conn) {
             logger.debug('TCP data client connected');
+            var waitingOn = 0;
 
             conn.on('end', function() {
                 logger.debug('TCP data client disconnected');
@@ -202,7 +201,7 @@ MeMember.prototype.initialize = function() {
                     var b = require('bl')();
                     b.append(chunk);
                     b.append(buff.slice(0, waitingOn));
-                    var m = EnvelopeDecoder.decode(b.slice());
+                    var m = envelopeCodec.decode(b.slice());
                     if(m !== undefined) {
                         m.decoded = false;
                         self.send(m);
@@ -221,7 +220,7 @@ MeMember.prototype.initialize = function() {
                         break;
                     } else {
                         var sliced = buff.slice(offset, offset + size);
-                        var message = EnvelopeDecoder.decode(sliced);
+                        var message = envelopeCodec.decode(sliced);
                         if(message !== undefined) {
                             message.decoded = false;
                             self.send(message);
@@ -232,58 +231,70 @@ MeMember.prototype.initialize = function() {
                 }
             });
         });
-        this.dataServer.listen(this.dataPort, '0.0.0.0');
+
+        dataServer.listen(this.dataPort, '0.0.0.0', function() {
+            if(gossipListening) {
+                cb();
+            } else {
+                dataListening = true;
+            }
+        });
+
     } else {
         var dgram = require('dgram');
 
         var self = this;
 
-        this.gossipServer = dgram.createSocket('udp4');
+        gossipServer = dgram.createSocket('udp4');
 
-        this.gossipServer.on('listening', function () {
+        gossipServer.on('listening', function () {
             logger.debug('UDP gossip server connected');
+            if(dataListening) {
+                cb();
+            } else {
+                gossipListening = true;
+            }
         });
-        this.gossipServer.on('end', function () {
+        gossipServer.on('end', function () {
             logger.debug('UDP gossip server disconnected');
         });
-        this.gossipServer.on('error', function (err) {
+        gossipServer.on('error', function (err) {
 
         });
-        this.gossipServer.on('message', function (msg, rinfo) {
-            var message = GossipDecoder.decode(msg);
+        gossipServer.on('message', function (msg, rinfo) {
+            var message = gossipCodec.decode(msg);
             gossipReactor.emit('gossip', message);
         });
 
-        this.gossipServer.bind(this.gossipPort, this.ip);
+        gossipServer.bind(this.gossipPort, this.ip);
 
-        this.dataServer = dgram.createSocket('udp4');
+        dataServer = dgram.createSocket('udp4');
 
-        this.dataServer.on('listening', function () {
+        dataServer.on('listening', function () {
             logger.debug('UDP data server connected');
+            if(gossipListening) {
+                cb();
+            } else {
+                dataListening = true;
+            }
         });
-        this.dataServer.on('end', function () {
+        dataServer.on('end', function () {
             logger.debug('UDP data server disconnected');
         });
-        this.dataServer.on('error', function (err) {
+        dataServer.on('error', function (err) {
 
         });
-        this.dataServer.on('message', function (data, rinfo) {
+        dataServer.on('message', function (data, rinfo) {
             var message = envelopedecoder.decode(data);
             message.decoded = false;
             self.send(message);
         });
 
-        this.dataServer.bind(this.dataPort, this.ip);
+        dataServer.bind(this.dataPort, this.ip);
     }
 
     if(this.useEncryption) {
         logger.info("Requiring encrypted message traffic.");
-        //KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        //keyGen.initialize(2048);
-        //this.keyPair = keyGen.generateKeyPair();
-        //this.publicKey = keyPair.getPublic().getEncoded();
-        //this.symmetricCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        //this.rsaCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
     }
 };
 
@@ -294,51 +305,16 @@ MeMember.prototype.addGossipConsumer = function(consumer) {
 MeMember.prototype.send = function(envelope) {
     if(!envelope.decoded) {
         if(envelope.encrypted) {
-            /*
-            byte[] symKey;
-            SecretKey key = null;
-            try {
-                // decrypt symmetric key
-                synchronized(rsaCipher) {
-                    rsaCipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
-                    symKey = rsaCipher.doFinal(envelope.getKey());
-                }
-                key = new SecretKeySpec(symKey, 0, symKey.length, "AES");
-            } catch (IllegalBlockSizeException ex) {
-                logger.error("Illegal block size in secret key.", ex);
-            } catch (BadPaddingException ex) {
-                logger.error("Bad padding in secret key.", ex);
-            } catch (InvalidKeyException ex) {
-                logger.error("Invalid public key.", ex);
-            }
-
-            try {
-                // decrypt data with symmetric key
-                byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-                IvParameterSpec ivspec = new IvParameterSpec(iv);
-                synchronized(symmetricCipher) {
-                    symmetricCipher.init(Cipher.DECRYPT_MODE, key, ivspec);
-                    envelope.setPayload(symmetricCipher.doFinal(envelope.getPayload()));
-                }
-            } catch (IllegalBlockSizeException ex) {
-                logger.error("Private key too big.", ex);
-            } catch (BadPaddingException ex) {
-                logger.error("Bad padding in payload.", ex);
-            } catch (InvalidKeyException ex) {
-                logger.error("Invalid symmetric key.", ex);
-            } catch (InvalidAlgorithmParameterException ex) {
-                logger.error("Invalid algorithm.", ex);
-            }
-            */
+            log.error('Encrypted messages not supported yet.');
         }
 
         // decode message
-        envelope.message = GenericDecoder.decode(envelope.payload);
+        envelope.message = genericCodec.decode(envelope.payload);
         //envelope.message = envelope.payload;
         envelope.decoded = true;
     }
 
-    ListenerRegistry.send(envelope);
+    registry.send(envelope);
 };
 
 module.exports = MeMember;

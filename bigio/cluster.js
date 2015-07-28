@@ -6,7 +6,7 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer. 
+ * list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
@@ -23,7 +23,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * The views and conclusions contained in the software and documentation are those
- * of the authors and should not be interpreted as representing official policies, 
+ * of the authors and should not be interpreted as representing official policies,
  * either expressed or implied, of the FreeBSD Project.
  */
 
@@ -49,18 +49,16 @@ var shuttingDown = false;
 
 var parameters = require('./parameters');
 var DeliveryType = require('./delivery-type');
-var NetworkUtil = require('./util/network-util');
-var TimeUtil = require('./util/time-util');
-var TopicUtils = require('./util/topic-utils');
+var networkUtil = require('./util/network-util');
+var utils = require('./util/utils');
 var MeMember = require('./member/me-member');
 var RemoteMember = require('./member/remote-member');
 var MemberStatus = require('./member/member-status');
 var MemberHolder = require('./member/member-holder');
-var MCDiscovery = require('./mcdiscovery');
-var ListenerRegistry = require('./member/listener-registry');
+var discovery = require('./mcdiscovery');
+var registry = require('./member/listener-registry');
 var gossiper = require('./gossiper');
-var Envelope = require('./envelope');
-var GenericEncoder = require('./codec/generic-encoder');
+var genericCodec = require('./codec/generic-codec');
 
 module.exports = {
 
@@ -72,16 +70,16 @@ module.exports = {
     },
 
     addInterceptor: function (topic, interceptor) {
-        ListenerRegistry.addInterceptor(topic, interceptor);
+        registry.addInterceptor(topic, interceptor);
     },
 
     addListener: function (topic, partition, consumer) {
-        ListenerRegistry.registerMemberForTopic(topic, partition, me);
-        ListenerRegistry.addLocalListener(topic, partition, consumer);
+        registry.registerMemberForTopic(topic, partition, me);
+        registry.addLocalListener(topic, partition, consumer);
     },
 
     removeAllListeners: function (topic) {
-        ListenerRegistry.removeAllLocalListeners(topic);
+        registry.removeAllLocalListeners(topic);
     },
 
     sendMessage: function (topic, partition, message, className, offsetMilliseconds) {
@@ -92,7 +90,7 @@ module.exports = {
         } else {
             envelope.executeTime = 0;
         }
-        envelope.millisecondsSinceMidnight = TimeUtil.getMillisecondsSinceMidnight();
+        envelope.millisecondsSinceMidnight = utils.getMillisecondsSinceMidnight();
         envelope.senderKey = me.ip + ":" + me.gossipPort + ":" + me.dataPort;
         envelope.topic = topic;
         envelope.partition = partition;
@@ -107,19 +105,19 @@ module.exports = {
 
         if(delivery === DeliveryType.ROUND_ROBIN) {
 
-            if (!(ListenerRegistry.getRegisteredMembers(topic).length <= 0)) {
+            if (!(registry.getRegisteredMembers(topic).length <= 0)) {
 
                 var index = (roundRobinIndex.get(topic) + 1) %
-                    ListenerRegistry.getRegisteredMembers(topic).size();
+                    registry.getRegisteredMembers(topic).size();
                 roundRobinIndex[topic] = index;
 
-                var member = ListenerRegistry.getRegisteredMembers(topic).get(index);
+                var member = registry.getRegisteredMembers(topic).get(index);
 
                 if (me.equals(member)) {
                     envelope.payload = message;
                     envelope.decoded = true;
                 } else {
-                    envelope.payload = GenericEncoder.encode(message);
+                    envelope.payload = genericCodec.encode(message);
                     envelope.decoded = false;
                 }
 
@@ -127,29 +125,29 @@ module.exports = {
             }
         } else if(delivery === DeliveryType.RANDOM) {
 
-            if (!ListenerRegistry.getRegisteredMembers(topic).isEmpty()) {
-                var index = Math.random() * ListenerRegistry.getRegisteredMembers(topic).size();
+            if (!registry.getRegisteredMembers(topic).isEmpty()) {
+                var index = Math.random() * registry.getRegisteredMembers(topic).size();
 
-                var member = ListenerRegistry.getRegisteredMembers(topic).get(index);
+                var member = registry.getRegisteredMembers(topic).get(index);
 
                 if (me.equals(member)) {
                     envelope.payload = message;
                     envelope.decoded = true;
                 } else {
-                    envelope.payload = GenericEncoder.encode(message);
+                    envelope.payload = genericCodec.encode(message);
                     envelope.decoded = false;
                 }
 
                 member.send(envelope);
             }
         } else if(delivery == DeliveryType.BROADCAST) {
-            var members = ListenerRegistry.getRegisteredMembers(topic);
+            var members = registry.getRegisteredMembers(topic);
 
             if (me.equals(member)) {
                 envelope.payload = message;
                 envelope.decoded = true;
             } else {
-                envelope.payload = GenericEncoder.encode(message);
+                envelope.payload = genericCodec.encode(message);
                 envelope.decoded = false;
             }
 
@@ -185,16 +183,16 @@ module.exports = {
 
         if (gossipPort == null) {
             logger.debug("Finding a random port for gossiping.");
-            gossipPort = NetworkUtil.getFreePort(function (err, port) {
+            gossipPort = networkUtil.getFreePort(function (err, port) {
                 gossipPort = port;
                 logger.debug("Using port " + gossipPort + " for gossiping.");
 
                 if (dataPort == null) {
                     logger.debug("Finding a random port for data.");
-                    dataPort = NetworkUtil.getFreePort(function (err, port) {
+                    dataPort = networkUtil.getFreePort(function (err, port) {
                         dataPort = port;
                         logger.debug("Using port " + dataPort + " for data.");
-                        NetworkUtil.getIp(function (err, ip) {
+                        networkUtil.getIp(function (err, ip) {
                             address = ip;
                             logger.debug("Greetings. I am " + address + ":" + gossipPort + ":" + dataPort);
                             connect(protocol, address, gossipPort, dataPort, cb);
@@ -209,12 +207,15 @@ module.exports = {
         shuttingDown = true;
 
         gossiper.shutdown(function() {
-            MCDiscovery.shutdown(function() {
-                for (var member in MemberHolder.members) {
-                    MemberHolder.members[member].shutdown();
+            discovery.shutdown(function() {
+                var keys = Object.keys(MemberHolder.members);
+                for (var i = 0; i < keys.length; i++) {
+                    MemberHolder.members[keys[i]].shutdown(function() {
+                        if(i == (keys.length - 1)) {
+                            typeof cb === 'function' && cb();
+                        }
+                    });
                 }
-
-                cb();
             });
         });
     }
@@ -272,22 +273,22 @@ var handleGossipMessage = function(message) {
             }
 
             var toRemove = [];
-            var regs = ListenerRegistry.getAllRegistrations();
+            var regs = registry.getAllRegistrations();
             for(var indx in regs) {
                 if(regs[indx].member.equals(m)) {
-                    var name = TopicUtils.getTopicString(regs[indx].topic, regs[indx].partition);
+                    var name = utils.getTopicString(regs[indx].topic, regs[indx].partition);
                     if(!(name in topics)) {
                         toRemove.push(regs[indx]);
                     }
                 }
             }
-            ListenerRegistry.removeRegistrations(toRemove);
+            registry.removeRegistrations(toRemove);
 
             for(var indx in topics) {
-                var topic = TopicUtils.getTopic(topics[indx]);
-                var partition = TopicUtils.getPartition(topics[indx]);
+                var topic = utils.getTopic(topics[indx]);
+                var partition = utils.getPartition(topics[indx]);
 
-                var mems = ListenerRegistry.getRegisteredMembers(topic);
+                var mems = registry.getRegisteredMembers(topic);
                 var found = false;
                 for(var k in mems) {
                     if(m.equals(mems[k].member)) {
@@ -296,7 +297,7 @@ var handleGossipMessage = function(message) {
                 }
 
                 if(!found) {
-                    ListenerRegistry.registerMemberForTopic(topic, partition, m);
+                    registry.registerMemberForTopic(topic, partition, m);
                 }
             }
         }
@@ -322,20 +323,19 @@ var connect = function(protocol, address, gossipPort, dataPort, cb) {
     }
 
     me.status = MemberStatus.Alive;
-    me.initialize();
-    MemberHolder.updateMemberStatus(me);
+    me.initialize(function() {
+        MemberHolder.updateMemberStatus(me);
 
-    me.addGossipConsumer(function(message) {
-        handleGossipMessage(message);
-    });
+        me.addGossipConsumer(function(message) {
+            handleGossipMessage(message);
+        });
 
-    MCDiscovery.initialize(me, function() {
-        ListenerRegistry.initialize(me);
+        discovery.initialize(me, function() {
+            registry.initialize(me);
 
-        gossiper.initialize(me);
+            gossiper.initialize(me);
 
-        cb();
+            cb();
+        });
     });
 };
-
-

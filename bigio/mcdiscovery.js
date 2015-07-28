@@ -6,7 +6,7 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer. 
+ * list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
@@ -23,7 +23,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * The views and conclusions contained in the software and documentation are those
- * of the authors and should not be interpreted as representing official policies, 
+ * of the authors and should not be interpreted as representing official policies,
  * either expressed or implied, of the FreeBSD Project.
  */
 
@@ -36,12 +36,11 @@ var logger = new (winston.Logger)({
 });
 var parameters = require('./parameters');
 var GossipMessage = require('./gossip-message');
-var GossipEncoder = require('./codec/gossip-encoder');
-var GossipDecoder = require('./codec/gossip-decoder');
-var MemberHolder = require('./member/member-holder');
+var gossipCodec = require('./codec/gossip-codec');
+var holder = require('./member/member-holder');
 var MemberStatus = require('./member/member-status');
 var RemoteMember = require('./member/remote-member');
-var TimeUtil = require('./util/time-util');
+var utils = require('./util/utils');
 var dgram = require('dgram');
 
 var MULTICAST_ENABLED_PROPERTY = "io.bigio.multicast.enabled";
@@ -77,11 +76,11 @@ module.exports = {
 
         client.on('message', function (data, rinfo) {
 
-            var message = GossipDecoder.decode(data);
+            var message = gossipCodec.decode(data);
 
             var key = message.ip + ":" + message.gossipPort + ":" + message.dataPort;
 
-            var member = MemberHolder.getMember(key);
+            var member = holder.getMember(key);
 
             if (member == undefined) {
                 if ("udp" == protocol) {
@@ -107,7 +106,7 @@ module.exports = {
                 member.tags[k] = message.tags[k];
             }
 
-            MemberHolder.updateMemberStatus(member);
+            holder.updateMemberStatus(member);
         });
 
 
@@ -141,7 +140,7 @@ var announce = function() {
     message.ip = me.ip;
     message.gossipPort = me.gossipPort;
     message.dataPort = me.dataPort;
-    message.millisecondsSinceMidnight = TimeUtil.getMillisecondsSinceMidnight();
+    message.millisecondsSinceMidnight = utils.getMillisecondsSinceMidnight();
     for (var key in me.tags) {
         message.tags[key] = me.tags[key];
     }
@@ -151,7 +150,7 @@ var announce = function() {
     message.publicKey = me.publicKey;
     message.eventListeners = {};
 
-    var bytes = new Buffer(GossipEncoder.encode(message));
+    var bytes = new Buffer(gossipCodec.encode(message));
     server.send(bytes, 0, bytes.length, multicastPort, multicastGroup, function() {
         server.close();
     });

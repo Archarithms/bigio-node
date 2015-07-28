@@ -106,26 +106,3 @@ var nextPort = function(cb) {
         nextPort(cb);
     })
 }
-
-/*
-            if(networkInterfaceName == null || "".equals(networkInterfaceName)) {
-                switch(Parameters.INSTANCE.currentOS()) {
-                    case WIN_64:
-                    case WIN_32:
-                        networkInterfaceName = "lo";
-                        break;
-                    case LINUX_64:
-                    case LINUX_32:
-                        networkInterfaceName = "eth0";
-                        break;
-                    case MAC_64:
-                    case MAC_32:
-                        networkInterfaceName = "en0";
-                        break;
-                    default:
-                        LOG.error("Cannot determine operating system. Cluster cannot form.");
-                }
-            } else {
-                networkInterfaceName = networkInterfaceName.trim();
-            }
-*/

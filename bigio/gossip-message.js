@@ -6,7 +6,7 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer. 
+ * list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
@@ -23,13 +23,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * The views and conclusions contained in the software and documentation are those
- * of the authors and should not be interpreted as representing official policies, 
+ * of the authors and should not be interpreted as representing official policies,
  * either expressed or implied, of the FreeBSD Project.
  */
 
 /**
  * A message that contains the gossiped data.
- * 
+ *
  * @author Andy Trimble
  */
 var GossipMessage = function() {
@@ -45,35 +45,5 @@ GossipMessage.prototype.tags = {};
 GossipMessage.prototype.members = [];
 GossipMessage.prototype.clock = [];
 GossipMessage.prototype.eventListeners = {};
-
-/**
- * Produce a nice textual representation of the message.
- *
- * @return the message as a string.
- */
-GossipMessage.prototype.toString = function() {
-    /* StringBuilder buff = new StringBuilder();
-    buff.append("GossipMessage: ").append("\n")
-            .append("Address: ").append(getIp()).append("\n")
-            .append("GossipPort: ").append(getGossipPort()).append("\n")
-            .append("DataPort: ").append(getDataPort()).append("\n")
-            .append("Time: ").append(getMillisecondsSinceMidnight()).append("\n")
-            .append("Tags: ").append("\n");
-    for(String key : getTags().keySet()) {
-        buff.append("    ").append(key).append(" -> ").append(getTags().get(key)).append("\n");
-    }
-    buff.append("Members: ").append("\n");
-    for(int i = 0; i < getMembers().size(); ++i) {
-        buff.append("    ").append(getMembers().get(i)).append(" -- ").append(getClock().get(i)).append("\n");
-    }
-    buff.append("Listeners: ").append("\n");
-    for(String key : getListeners().keySet()) {
-        buff.append("    ").append(key).append("\n");
-        for(String topic : getListeners().get(key)) {
-            buff.append("        ").append(topic).append("\n");
-        }
-    }
-    return buff.toString();*/
-};
 
 module.exports = GossipMessage;

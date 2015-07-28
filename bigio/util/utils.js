@@ -27,38 +27,59 @@
  * either expressed or implied, of the FreeBSD Project.
  */
 
-var logger = require('winston');
-var bl = require('bl');
-var msgpack = require('msgpack5')();
-
 /**
- * This is a class for decoding gossip messages.
+ * A utility class for working with topics and partitions.
  *
  * @author Andy Trimble
  */
 module.exports = {
 
-    /**
-     * Decode a message.
-     *
-     * @param bytes the raw message.
-     * @return the decoded message.
-     * @throws IOException in case of an error in decoding.
-     */
-    decode: function (bytes) {
-        var buff = bl(bytes);
-        var unpacked = [];
+    ALL_PARTITIONS: ".*",
 
-        while(buff.length > 0) {
-            try {
-                unpacked.push(msgpack.decode(buff));
-            } catch(err) {
-                logger.warn('Error decoding message');
-                logger.warn(err);
-                break;
+    getTopicString: function(topic, partition) {
+        return topic + "(" + partition + ")";
+    },
+
+    getNotifyTopicString: function(topic, partition) {
+        return topic + partition;
+    },
+
+    getTopic: function(topicPartition) {
+        if(String(topicPartition).indexOf('(') > -1) {
+            return topicPartition.split("\\(")[0];
+        }
+        return topicPartition;
+    },
+
+    getPartition: function(topicPartition) {
+        if(String(topicPartition).indexOf('(') > -1) {
+            var spl = topicPartition.split("\\(");
+            if (spl.length > 1) {
+                return spl[1];
             }
         }
 
-        return unpacked;
+        return this.ALL_PARTITIONS;
+    },
+
+    getMillisecondsSinceMidnight: function() {
+        var now = new Date(),
+        then = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            0,0,0);
+        var diff = now.getTime() - then.getTime();
+
+        return diff;
+    },
+
+    getKey: function(args) {
+        if(args.member) {
+            return String(args.member.ip) + ':' + String(args.member.gossipPort) + ':' + String(args.member.dataPort);
+        } else if(args.ip && args.gossipPort && args.dataPort) {
+            return String(args.ip) + ':' + String(args.gossipPort) + ':' + String(args.dataPort);
+        }
+        return '';
     }
 };

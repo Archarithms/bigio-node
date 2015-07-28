@@ -6,7 +6,7 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer. 
+ * list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
@@ -23,26 +23,64 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * The views and conclusions contained in the software and documentation are those
- * of the authors and should not be interpreted as representing official policies, 
+ * of the authors and should not be interpreted as representing official policies,
  * either expressed or implied, of the FreeBSD Project.
  */
 
+var logger = require('winston');
+var bl = require('bl');
+var bops = require('bops');
+var msgpack = require('msgpack5')();
+
 /**
- * A utility class for converting times.
- * 
+ * This is a class for decoding gossip messages.
+ *
  * @author Andy Trimble
  */
 module.exports = {
-        
-    getMillisecondsSinceMidnight: function() {
-        var now = new Date(),
-        then = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate(),
-            0,0,0);
-        var diff = now.getTime() - then.getTime();
 
-        return diff;
+    /**
+     * Decode a message.
+     *
+     * @param bytes the raw message.
+     * @return the decoded message.
+     * @throws IOException in case of an error in decoding.
+     */
+    decode: function (bytes) {
+        var buff = bl(bytes);
+        var unpacked = [];
+
+        while(buff.length > 0) {
+            try {
+                var v = msgpack.decode(buff);
+                if(bops.is(v)) {
+                    var obj = this.decode(v);
+                    unpacked.push(obj);
+                } else {
+                    unpacked.push(v);
+                }
+            } catch(err) {
+                logger.warn('Error decoding message');
+                logger.warn(err);
+                break;
+            }
+        }
+
+        return unpacked;
+    },
+
+    /**
+     * Encode a message payload.
+     *
+     * @param message a message.
+     * @return the encoded form of the message.
+     * @throws IOException in case of an error in encoding.
+     */
+    encode: function(message) {
+        var arr = [];
+        for(var key in message) {
+            arr.push(msgpack.encode(message[key]));
+        }
+        return bops.join(arr);
     }
 };

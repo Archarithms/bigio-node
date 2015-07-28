@@ -6,7 +6,7 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer. 
+ * list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
@@ -23,7 +23,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * The views and conclusions contained in the software and documentation are those
- * of the authors and should not be interpreted as representing official policies, 
+ * of the authors and should not be interpreted as representing official policies,
  * either expressed or implied, of the FreeBSD Project.
  */
 
@@ -35,15 +35,15 @@ var logger = new (winston.Logger)({
     ]
 });
 
-var MemberHolder = require('./member-holder');
+var memberHolder = require('./member-holder');
 var MemberStatus = require('./member-status');
 var parameters = require('../parameters');
-var GossipEncoder = require('../codec/gossip-encoder');
-var EnvelopeEncoder = require('../codec/envelope-encoder');
+var gossipCodec = require('../codec/gossip-codec');
+var envelopeCodec = require('../codec/envelope-codec');
 
 /**
  * A TCP implementation of a remote BigIO cluster member.
- * 
+ *
  * @author Andy Trimble
  */
 var RemoteMember = function(ip, gossipPort, dataPort, useTCP) {
@@ -139,20 +139,7 @@ RemoteMember.prototype.equals = function(obj) {
 
 RemoteMember.prototype.initialize = function() {
     if (this.useSSL) {
-        /* if(this.useSelfSigned) {
-         logger.warn("Trusting all certificates. Only use self signed certificates for testing.");
-         try {
-         sslContext = SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE);
-         } catch (SSLException ex) {
-         LOG.error("SSL error.", ex);
-         }
-         } else {
-         try {
-         sslContext = SslContext.newClientContext(new File(certChainFile));
-         } catch (SSLException ex) {
-         LOG.error("SSL error.", ex);
-         }
-         } */
+
     } else if (this.useTCP) {
         var net = require('net');
 
@@ -171,22 +158,6 @@ RemoteMember.prototype.initialize = function() {
             self.gossipConnected = false;
         });
 
-        /*
-        this.dataClient = new net.Socket();
-        this.dataClient.connect(this.dataPort, this.ip, function () {
-            logger.debug('TCP data socket connected with remote member ' + self.ip + ':' + self.dataPort);
-            self.dataConnected = true;
-        });
-        this.dataClient.on('end', function () {
-            logger.debug('TCP data socket disconnected');
-        });
-        this.dataClient.on('error', function (err) {
-            self.dataClient.destroy();
-            self.dataConnected = false;
-            self.status = MemberStatus.Left;
-            MemberHolder.updateMemberStatus(self);
-        });
-        */
         this.dataClient = net.connect({port: this.dataPort, host: this.ip}, function() {
             logger.debug('TCP data socket connected with remote member ' + self.ip + ':' + self.dataPort);
             self.dataConnected = true;
@@ -199,7 +170,7 @@ RemoteMember.prototype.initialize = function() {
             self.dataClient.destroy();
             self.dataConnected = false;
             self.status = MemberStatus.Left;
-            MemberHolder.updateMemberStatus(self);
+            memberHolder.updateMemberStatus(self);
         });
     } else {
         var dgram = require('dgram');
@@ -232,67 +203,29 @@ RemoteMember.prototype.initialize = function() {
             self.dataClient.destroy();
             self.dataConnected = false;
             self.status = MemberStatus.Left;
-            MemberHolder.updateMemberStatus(self);
+            memberHolder.updateMemberStatus(self);
         });
         this.dataClient.bind(this.dataPort, this.ip);
     }
 
     if(this.publicKey != undefined) {
-        /*
-        this.cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
-        this.key = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(publicKey));
 
-        // generate symmetric key
-        this.symmetricCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        KeyGenerator symmetricKeyGen = KeyGenerator.getInstance("AES");
-        symmetricKeyGen.init(128);
-        this.secretKey = symmetricKeyGen.generateKey();
-        */
     }
 };
 
 RemoteMember.prototype.send = function(message) {
-    /*
-    if(publicKey != null) {
-        try {
-            // encrypt data with symmetric key
-            byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-            IvParameterSpec ivspec = new IvParameterSpec(iv);
-            synchronized(symmetricCipher) {
-                symmetricCipher.init(Cipher.ENCRYPT_MODE, secretKey, ivspec);
-                message.setPayload(symmetricCipher.doFinal(message.getPayload()));
-            }
-
-            // encrypt key with asymmetric key
-            synchronized(cipher) {
-                cipher.init(Cipher.ENCRYPT_MODE, key);
-                message.setKey(cipher.doFinal(secretKey.getEncoded()));
-            }
-            message.setEncrypted(true);
-        } catch (IllegalBlockSizeException ex) {
-            LOG.error("Wrong block size.", ex);
-        } catch (BadPaddingException ex) {
-            LOG.error("Bad padding.", ex);
-        } catch (InvalidKeyException ex) {
-            LOG.error("Invalid private key.", ex);
-        } catch (InvalidAlgorithmParameterException ex) {
-            LOG.error("Invalid algorithm parameter.", ex);
-        }
-    }
-    */
-
-    var bytes = EnvelopeEncoder.encode(message);
+    var bytes = envelopeCodec.encode(message);
     this.dataClient.write(bytes);
 };
 
 RemoteMember.prototype.gossip = function(message) {
     if (this.gossipConnected) {
-        var bytes = GossipEncoder.encode(message);
+        var bytes = gossipCodec.encode(message);
         this.gossipSocket.write(bytes);
     }
 };
 
-RemoteMember.prototype.shutdown = function() {
+RemoteMember.prototype.shutdown = function(cb) {
     logger.debug("Closed remote sockets.");
     if (this.useTCP) {
         this.gossipSocket.end();
@@ -301,6 +234,8 @@ RemoteMember.prototype.shutdown = function() {
         this.gossipSocket.close();
         this.dataClient.close();
     }
+
+    typeof cb === 'function' && cb();
 };
 
 module.exports = RemoteMember;

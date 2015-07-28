@@ -6,7 +6,7 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer. 
+ * list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
@@ -23,24 +23,80 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * The views and conclusions contained in the software and documentation are those
- * of the authors and should not be interpreted as representing official policies, 
+ * of the authors and should not be interpreted as representing official policies,
  * either expressed or implied, of the FreeBSD Project.
  */
 
 var logger = require('winston');
-var msgpack = require('msgpack5')();
 var bops = require('bops');
+var bl = require('bl');
+var msgpack = require('msgpack5')();
 
 /**
- * This is a class for encoding envelope messages.
- * 
+ * This is a class for decoding gossip messages.
+ *
  * @author Andy Trimble
  */
 module.exports = {
-    
+
+    /**
+     * Decode a message.
+     *
+     * @param bytes the raw message.
+     * @return the decoded message.
+     * @throws IOException in case of an error in decoding.
+     */
+    decode: function(bytes) {
+        var message = {};
+
+        var buff = bl(bytes);
+        //buff.consume(2);
+        var unpacked = [];
+
+        while(buff.length > 0) {
+            try {
+                unpacked.push(msgpack.decode(buff));
+            } catch(err) {
+                logger.warn('Error decoding message');
+                logger.warn(err);
+                break;
+            }
+        }
+
+        var index = 0;
+
+        var ip = unpacked[index++] + '.' + unpacked[index++] + '.' + unpacked[index++] + '.' + unpacked[index++];
+        var gossipPort = unpacked[index++];
+        var dataPort = unpacked[index++];
+
+        message.senderKey = ip + ':' + gossipPort + ':' + dataPort;
+
+        var encrypted = unpacked[index++];
+        message.isEncrypted = encrypted;
+
+        if(encrypted === "true") {
+            logger.info("Message encrypted");
+            message.key = unpacked[index++];
+        }
+
+        message.executeTime = unpacked[index++];
+        message.millisecondsSinceMidnight = unpacked[index++];
+        message.topic = unpacked[index++];
+        message.partition = unpacked[index++];
+        message.className = unpacked[index++];
+        try {
+            message.payload = bops.from(unpacked[index], encoding="utf8");
+        } catch(err) {
+            logger.warn('Could not unpack payload');
+            return undefined;
+        }
+
+        return message;
+    },
+
     /**
      * Encode a message envelope.
-     * 
+     *
      * @param message a message to encode.
      * @return the encoded message.
      * @throws IOException in case of an encode error.

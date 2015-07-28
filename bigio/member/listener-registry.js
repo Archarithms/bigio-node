@@ -35,13 +35,9 @@ var logger = new (winston.Logger)({
     ]
 });
 var events = require('events');
-
-var topicutils = require('../util/topic-utils');
+var utils = require('../util/utils');
 
 var me;
-var map = {};
-var interceptors = {};
-var reactor = new events.EventEmitter();
 
 /**
  * A class for managing listener registrations.
@@ -49,6 +45,11 @@ var reactor = new events.EventEmitter();
  * @author Andy Trimble
  */
 module.exports = {
+    interceptors: {},
+
+    reactor: new events.EventEmitter(),
+
+    map: {},
 
     /**
      * Add a topic interceptor.
@@ -57,10 +58,10 @@ module.exports = {
      * @param interceptor an interceptor.
      */
     addInterceptor: function(topic, interceptor) {
-        if(interceptors[topic] == undefined) {
-            interceptors[topic] = [];
+        if(this.interceptors[topic] == undefined) {
+            this.interceptors[topic] = [];
         }
-        interceptors[topic].push(interceptor);
+        this.interceptors[topic].push(interceptor);
     },
 
     /**
@@ -89,7 +90,7 @@ module.exports = {
      * @param listener a listener.
      */
     addLocalListener: function(topic, partition, listener) {
-        reactor.addListener(topicutils.getTopicString(topic, partition), listener);
+        this.reactor.addListener(utils.getTopicString(topic, partition), listener);
     },
 
     /**
@@ -98,7 +99,7 @@ module.exports = {
      * @param topic a topic.
      */
     removeAllLocalListeners: function(topic) {
-        var allRegs = map[me];
+        var allRegs = this.map[me];
 
         if(allRegs != undefined) {
             var regs = allRegs[topic];
@@ -118,9 +119,9 @@ module.exports = {
      * @param regs a set of registrations.
      */
     removeRegistrations: function(regs) {
-        for(var memberKey in map) {
-            for(var key in map[memberKey]) {
-                delete map[memberKey][key][regs];
+        for(var memberKey in this.map) {
+            for(var key in this.map[memberKey]) {
+                delete this.map[memberKey][key][regs];
             }
         }
     },
@@ -133,10 +134,10 @@ module.exports = {
     getAllRegistrations: function() {
         var ret = [];
 
-        for(var memberKey in map) {
-            for(var reg in map[memberKey]) {
-                for(var indx in map[memberKey][reg]) {
-                    ret.push(map[memberKey][reg][indx]);
+        for(var memberKey in this.map) {
+            for(var reg in this.map[memberKey]) {
+                for(var indx in this.map[memberKey][reg]) {
+                    ret.push(this.map[memberKey][reg][indx]);
                 }
             }
         }
@@ -154,12 +155,12 @@ module.exports = {
     getRegisteredMembers: function(topic) {
         var ret = [];
 
-        for(var member in map) {
-            for(var regs in map[member]) {
-                for(var indx in map[member][regs]) {
-                    var key = map[member][regs][indx].topic;
+        for(var member in this.map) {
+            for(var regs in this.map[member]) {
+                for(var indx in this.map[member][regs]) {
+                    var key = this.map[member][regs][indx].topic;
                     if(key == topic) {
-                        ret.push(map[member][regs][indx]);
+                        ret.push(this.map[member][regs][indx]);
                     }
                 }
             }
@@ -179,20 +180,20 @@ module.exports = {
 
         var memberKey = member.ip + ':' + member.gossipPort + ':' + member.dataPort;
 
-        if(map[memberKey] == undefined) {
-            map[memberKey] = {};
+        if(this.map[memberKey] == undefined) {
+            this.map[memberKey] = {};
         }
 
-        if(map[memberKey][topic] == undefined) {
-            map[memberKey][topic]  = [];
+        if(this.map[memberKey][topic] == undefined) {
+            this.map[memberKey][topic]  = [];
         }
 
         var found = false;
-        for(var reg in map[memberKey][topic]) {
-            var thatMember = map[memberKey][topic][reg].member;
+        for(var reg in this.map[memberKey][topic]) {
+            var thatMember = this.map[memberKey][topic][reg].member;
             var thatMemberKey = thatMember.ip + ':' + thatMember.gossipPort + ':' + thatMember.dataPort;
 
-            if(String(topic) === String(map[memberKey][topic][reg].topic) && String(partition) === String(map[memberKey][topic][reg].partition) && memberKey == thatMemberKey) {
+            if(String(topic) === String(this.map[memberKey][topic][reg].topic) && String(partition) === String(this.map[memberKey][topic][reg].partition) && memberKey == thatMemberKey) {
                 found = true;
                 break;
             }
@@ -203,7 +204,7 @@ module.exports = {
             reg.member = member;
             reg.topic = String(topic);
             reg.partition = String(partition);
-            map[memberKey][topic].push(reg);
+            this.map[memberKey][topic].push(reg);
         }
     },
 
@@ -214,18 +215,18 @@ module.exports = {
      * @throws IOException in case of a sending error.
      */
     send:function(envelope) {
-        if(envelope.topic in Object.keys(interceptors)) {
-            for(var interceptor in interceptors[envelope.topic]) {
+        if(envelope.topic in Object.keys(this.interceptors)) {
+            for(var interceptor in this.interceptors[envelope.topic]) {
                 envelope = interceptor.intercept(envelope);
             }
         }
 
         if(envelope.executeTime > 0) {
             setTimeout(function() {
-                reactor.emit(topicutils.getTopicString(envelope.topic, envelope.partition), envelope.message);
+                this.reactor.emit(utils.getTopicString(envelope.topic, envelope.partition), envelope.message);
             }, envelope.executeTime);
         } else if(envelope.executeTime >= 0) {
-            reactor.emit(topicutils.getTopicString(envelope.topic, envelope.partition), envelope.message);
+            this.reactor.emit(utils.getTopicString(envelope.topic, envelope.partition), envelope.message);
         }
     }
 };

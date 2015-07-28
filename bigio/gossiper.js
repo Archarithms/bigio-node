@@ -6,7 +6,7 @@
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer. 
+ * list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
@@ -23,7 +23,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * The views and conclusions contained in the software and documentation are those
- * of the authors and should not be interpreted as representing official policies, 
+ * of the authors and should not be interpreted as representing official policies,
  * either expressed or implied, of the FreeBSD Project.
  */
 
@@ -36,10 +36,10 @@ var logger = new (winston.Logger)({
 });
 
 var MemberHolder = require('./member/member-holder');
-var ListenerRegistry = require('./member/listener-registry');
+var registry = require('./member/listener-registry');
 var parameters = require('./parameters');
 var GossipMessage = require('./gossip-message');
-var TimeUtil = require('./util/time-util');
+var utils = require('./util/utils');
 
 var GOSSIP_INTERVAL_PROPERTY = "io.bigio.gossip.interval";
 var CLEANUP_INTERVAL_PROPERTY = "io.bigio.gossip.cleanup";
@@ -53,7 +53,7 @@ var me;
 
 /**
  * This is the gossip protocol implementation.
- * 
+ *
  * @author Andy Trimble
  */
 module.exports = {
@@ -97,7 +97,7 @@ module.exports = {
                 memberList.ip = me.ip;
                 memberList.gossipPort = me.gossipPort;
                 memberList.dataPort = me.dataPort;
-                memberList.millisecondsSinceMidnight = TimeUtil.getMillisecondsSinceMidnight();
+                memberList.millisecondsSinceMidnight = utils.getMillisecondsSinceMidnight();
                 memberList.publicKey = me.publicKey;
                 memberList.tags = me.tags;
                 memberList.members = [];
@@ -114,7 +114,7 @@ module.exports = {
                     memberList.clock[i] = m.sequence;
                 }
 
-                var regs = ListenerRegistry.getAllRegistrations();
+                var regs = registry.getAllRegistrations();
                 for(var indx in regs) {
                     var key = regs[indx].member.ip + ":" + regs[indx].member.gossipPort + ":" + regs[indx].member.dataPort;
                     if(memberList.eventListeners[key] == undefined) {
