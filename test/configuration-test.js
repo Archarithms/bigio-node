@@ -1,7 +1,7 @@
 var assert = require('assert');
 
 describe('configuration', function() {
-    it('configure the system', function() {
+    it('configure the system', function(done) {
         var bigio = require('../bigio/bigio');
         bigio.initialize({
             protocol: 'tcp',
@@ -9,25 +9,20 @@ describe('configuration', function() {
             dataPort: 9999,
             encrypt: false,
             ssl: false,
-            selfSigned: false,
-            certchainFile: 'somefile.pem',
+            selfSigned: true,
+            certChainFile: 'somefile.pem',
             keyFile: 'somekeyfile.pem',
             keyFilePassword: 'apassword',
             maxRetry: 4,
             retryInterval: 5000,
             connectionTimeout: 10000,
-            useMulticast: true,
+            useMulticast: false,
             multicastGroup: '239.0.0.2',
             multicastPort: 9898,
-            nic: 'eth0',
             gossipInterval: 250,
             cleanupInterval: 10000
+        }, function() {
+            done();
         });
-        /* bigio.initialize(function() {
-            console.log('done');
-        }); */
-        /* bigio.initialize({protocol: 'udp'}, function() {
-            console.log('done');
-        }); */
     });
 });

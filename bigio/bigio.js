@@ -291,7 +291,6 @@ module.exports = {
     }
 }
 
-//var connect = function(protocol, address, gossipPort, dataPort, cb) {
 var connect = function(config, cb) {
 
     if('udp' === config['protocol']) {
