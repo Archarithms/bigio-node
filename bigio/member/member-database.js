@@ -216,9 +216,9 @@ module.exports = {
      * @throws IOException in case of a sending error.
      */
     send:function(envelope) {
-        if(envelope.topic in Object.keys(this.interceptors)) {
-            for(var interceptor in this.interceptors[envelope.topic]) {
-                envelope = interceptor.intercept(envelope);
+        if(Object.keys(this.interceptors).indexOf(envelope.topic) >= 0) {
+            for(var index in this.interceptors[envelope.topic]) {
+                envelope = this.interceptors[envelope.topic][index](envelope);
             }
         }
 
