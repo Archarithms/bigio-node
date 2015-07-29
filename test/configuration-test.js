@@ -20,7 +20,9 @@ describe('configuration', function() {
             multicastGroup: '239.0.0.2',
             multicastPort: 9898,
             gossipInterval: 250,
-            cleanupInterval: 10000
+            cleanupInterval: 10000,
+            logLevel: 'debug',
+            logFile: 'test.log'
         }, function() {
             done();
         });

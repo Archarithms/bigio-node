@@ -27,21 +27,7 @@
  * either expressed or implied, of the FreeBSD Project.
  */
 
-var winston = require('winston')
-var logger = new (winston.Logger)({
-    transports: [
-        new (winston.transports.Console)({ level: 'debug' })
-        //new (winston.transports.File)({ filename: 'somefile.log' })
-    ]
-});
-
-var me;
-
-var deliveries = {};
-var roundRobinIndex = {};
-
-var shuttingDown = false;
-
+var logger = require('winston');
 var utils = require('./utils');
 var MeMember = require('./member/me');
 var RemoteMember = require('./member/you');
@@ -50,6 +36,13 @@ var discovery = require('./mcdiscovery');
 var db = require('./member/member-database');
 var gossiper = require('./gossiper');
 var genericCodec = require('./codec/generic-codec');
+
+var me;
+
+var deliveries = {};
+var roundRobinIndex = {};
+
+var shuttingDown = false;
 
 var DeliveryType = {
     /**
@@ -80,7 +73,8 @@ var defaultConfiguration = {
     multicastGroup: '239.0.0.1',
     multicastPort: 8989,
     gossipInterval: 250,
-    cleanupInterval: 10000
+    cleanupInterval: 10000,
+    logLevel: 'info'
 }
 
 var config;
@@ -103,6 +97,15 @@ module.exports = {
         }
 
         config = params
+
+        logger.level = config['logLevel'];
+
+        if(config['logFile']) {
+            logger.add(logger.transports.File, {
+                filename: config['logFile'],
+                level: config['logLevel']
+            });
+        }
 
         utils.setConfiguration(config);
 

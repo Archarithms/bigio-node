@@ -27,13 +27,7 @@
  * either expressed or implied, of the FreeBSD Project.
  */
 
-var winston = require('winston')
-var logger = new (winston.Logger)({
-    transports: [
-        new (winston.transports.Console)({ level: 'debug' })
-        //new (winston.transports.File)({ filename: 'somefile.log' })
-    ]
-});
+var logger = require('winston')
 var gossipCodec = require('./codec/gossip-codec');
 var db = require('./member/member-database');
 var MemberStatus = require('./member/member-status');
