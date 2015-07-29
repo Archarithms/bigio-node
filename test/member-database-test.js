@@ -3,7 +3,7 @@ var assert = chai.assert;
 var expect = chai.expect;
 var utils = require('../bigio/utils');
 var db = require('../bigio/member/member-database');
-var me_member = require('../bigio/member/me-member');
+var me_member = require('../bigio/member/me');
 var MemberStatus = require('../bigio/member/member-status');
 
 function intercept() { }

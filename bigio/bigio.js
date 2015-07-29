@@ -43,8 +43,8 @@ var roundRobinIndex = {};
 var shuttingDown = false;
 
 var utils = require('./utils');
-var MeMember = require('./member/me-member');
-var RemoteMember = require('./member/remote-member');
+var MeMember = require('./member/me');
+var RemoteMember = require('./member/them');
 var MemberStatus = require('./member/member-status');
 var discovery = require('./mcdiscovery');
 var db = require('./member/member-database');
