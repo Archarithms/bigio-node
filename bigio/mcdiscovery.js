@@ -37,7 +37,7 @@ var logger = new (winston.Logger)({
 var gossipCodec = require('./codec/gossip-codec');
 var db = require('./member/member-database');
 var MemberStatus = require('./member/member-status');
-var RemoteMember = require('./member/them');
+var RemoteMember = require('./member/you');
 var utils = require('./utils');
 var dgram = require('dgram');
 

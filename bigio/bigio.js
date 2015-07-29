@@ -44,7 +44,7 @@ var shuttingDown = false;
 
 var utils = require('./utils');
 var MeMember = require('./member/me');
-var RemoteMember = require('./member/them');
+var RemoteMember = require('./member/you');
 var MemberStatus = require('./member/member-status');
 var discovery = require('./mcdiscovery');
 var db = require('./member/member-database');
