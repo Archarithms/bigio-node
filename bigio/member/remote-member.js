@@ -35,7 +35,7 @@ var logger = new (winston.Logger)({
     ]
 });
 
-var memberHolder = require('./member-holder');
+var db = require('./member-database');
 var MemberStatus = require('./member-status');
 var gossipCodec = require('../codec/gossip-codec');
 var envelopeCodec = require('../codec/envelope-codec');
@@ -152,7 +152,7 @@ RemoteMember.prototype.initialize = function() {
             self.dataClient.destroy();
             self.dataConnected = false;
             self.status = MemberStatus.Left;
-            memberHolder.updateMemberStatus(self);
+            db.updateMemberStatus(self);
         });
     } else {
         var dgram = require('dgram');
@@ -185,7 +185,7 @@ RemoteMember.prototype.initialize = function() {
             self.dataClient.destroy();
             self.dataConnected = false;
             self.status = MemberStatus.Left;
-            memberHolder.updateMemberStatus(self);
+            db.updateMemberStatus(self);
         });
         this.dataClient.bind(this.dataPort, this.ip);
     }

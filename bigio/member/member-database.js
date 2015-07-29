@@ -35,6 +35,7 @@ var logger = new (winston.Logger)({
     ]
 });
 var events = require('events');
+var MemberStatus = require('./member-status');
 var utils = require('../utils');
 
 var me;
@@ -227,6 +228,67 @@ module.exports = {
             }, envelope.executeTime);
         } else if(envelope.executeTime >= 0) {
             this.reactor.emit(utils.getTopicString(envelope.topic, envelope.partition), envelope.message);
+        }
+    },
+
+    members: {},
+    activeMembers: {},
+    deadMembers: {},
+
+    clear: function() {
+        this.members.clear();
+        this.activeMembers.clear();
+        this.deadMembers.clear();
+    },
+
+    getMember: function(key) {
+        return this.members[key];
+    },
+
+    getAllMembers: function() {
+        var ret = [];
+        ret.concat(this.members);
+        return ret;
+    },
+
+    getActiveMembers: function() {
+        var ret = [];
+        for(var m in this.activeMembers) {
+            ret.push(this.activeMembers[m]);
+        }
+        return ret;
+    },
+
+    getDeadMembers: function() {
+        var ret = [];
+        for(var m in this.deadMembers) {
+            ret.push(this.deadMembers[m]);
+        }
+        return ret;
+    },
+
+    updateMemberStatus: function(member) {
+        var key = member.ip + ":" + member.gossipPort + ":" + member.dataPort;
+
+        if(key in this.members) {
+            if(key in this.activeMembers
+                    && (member.status == MemberStatus.Failed
+                    || member.status == MemberStatus.Left
+                    || member.status == MemberStatus.Unknown)) {
+                delete this.activeMembers[key];
+                this.deadMembers[key] = member;
+            } else if(key in this.deadMembers && member.status == MemberStatus.Alive) {
+                delete this.deadMembers[key];
+                this.activeMembers[key] = member;
+            }
+        } else {
+            //logger.info('Adding new member at key ' + key);
+            this.members[key] = member;
+            if(MemberStatus.Alive == member.status) {
+                this.activeMembers[key] = member;
+            } else {
+                this.deadMembers[key] = member;
+            }
         }
     }
 };

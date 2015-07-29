@@ -36,7 +36,7 @@ var logger = new (winston.Logger)({
 });
 var events = require('events');
 var MemberStatus = require('./member-status');
-var registry = require('./listener-registry');
+var db = require('./member-database');
 var envelopeCodec = require('../codec/envelope-codec');
 var gossipCodec = require('../codec/gossip-codec');
 var genericCodec = require('../codec/generic-codec');
@@ -300,7 +300,7 @@ MeMember.prototype.send = function(envelope) {
         envelope.decoded = true;
     }
 
-    registry.send(envelope);
+    db.send(envelope);
 };
 
 module.exports = MeMember;

@@ -35,7 +35,7 @@ var logger = new (winston.Logger)({
     ]
 });
 var gossipCodec = require('./codec/gossip-codec');
-var holder = require('./member/member-holder');
+var db = require('./member/member-database');
 var MemberStatus = require('./member/member-status');
 var RemoteMember = require('./member/remote-member');
 var utils = require('./utils');
@@ -65,7 +65,7 @@ module.exports = {
 
             var key = message.ip + ":" + message.gossipPort + ":" + message.dataPort;
 
-            var member = holder.getMember(key);
+            var member = db.getMember(key);
 
             if (member == undefined) {
                 if ("udp" == protocol) {
@@ -91,7 +91,7 @@ module.exports = {
                 member.tags[k] = message.tags[k];
             }
 
-            holder.updateMemberStatus(member);
+            db.updateMemberStatus(member);
         });
 
         client.on('listening', function () {

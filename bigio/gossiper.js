@@ -35,8 +35,7 @@ var logger = new (winston.Logger)({
     ]
 });
 
-var MemberHolder = require('./member/member-holder');
-var registry = require('./member/listener-registry');
+var db = require('./member/member-database');
 var utils = require('./utils');
 
 var gossipInterval, cleanupInterval;
@@ -65,7 +64,7 @@ module.exports = {
 
             var chosenMember = undefined;
 
-            var activeKeys = Object.keys(MemberHolder.activeMembers);
+            var activeKeys = Object.keys(db.activeMembers);
             var activeMemberNum = activeKeys.length;
 
             if (activeMemberNum > 1) {
@@ -73,7 +72,7 @@ module.exports = {
                 do {
                     var randomNeighborIndex = Math.floor(Math.random() * activeMemberNum);
                     var chosenKey = activeKeys[randomNeighborIndex];
-                    chosenMember = MemberHolder.activeMembers[chosenKey];
+                    chosenMember = db.activeMembers[chosenKey];
 
                     if (--tries <= 0) {
                         chosenMember = undefined;
@@ -100,7 +99,7 @@ module.exports = {
 
                 for(var i = 0; i < activeMemberNum; ++i) {
                     var k = activeKeys[i];
-                    var m = MemberHolder.activeMembers[k];
+                    var m = db.activeMembers[k];
                     memberList.members.push(m.ip + ":" + m.gossipPort + ":" + m.dataPort);
 
                     if(m === me) {
@@ -109,7 +108,7 @@ module.exports = {
                     memberList.clock[i] = m.sequence;
                 }
 
-                var regs = registry.getAllRegistrations();
+                var regs = db.getAllRegistrations();
                 for(var indx in regs) {
                     var key = regs[indx].member.ip + ":" + regs[indx].member.gossipPort + ":" + regs[indx].member.dataPort;
                     if(memberList.eventListeners[key] == undefined) {

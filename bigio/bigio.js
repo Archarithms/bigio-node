@@ -46,9 +46,8 @@ var utils = require('./utils');
 var MeMember = require('./member/me-member');
 var RemoteMember = require('./member/remote-member');
 var MemberStatus = require('./member/member-status');
-var MemberHolder = require('./member/member-holder');
 var discovery = require('./mcdiscovery');
-var registry = require('./member/listener-registry');
+var db = require('./member/member-database');
 var gossiper = require('./gossiper');
 var genericCodec = require('./codec/generic-codec');
 
@@ -158,9 +157,9 @@ module.exports = {
 
         gossiper.shutdown(function() {
             discovery.shutdown(function() {
-                var keys = Object.keys(MemberHolder.members);
+                var keys = Object.keys(db.members);
                 for (var i = 0; i < keys.length; i++) {
-                    MemberHolder.members[keys[i]].shutdown(function() {
+                    db.members[keys[i]].shutdown(function() {
                         if(i == (keys.length - 1)) {
                             typeof cb === 'function' && cb();
                         }
@@ -201,13 +200,13 @@ module.exports = {
 
         if(delivery === DeliveryType.ROUND_ROBIN) {
 
-            if (!(registry.getRegisteredMembers(topic).length <= 0)) {
+            if (!(db.getRegisteredMembers(topic).length <= 0)) {
 
                 var index = (roundRobinIndex.get(topic) + 1) %
-                    registry.getRegisteredMembers(topic).size();
+                    db.getRegisteredMembers(topic).size();
                 roundRobinIndex[topic] = index;
 
-                var member = registry.getRegisteredMembers(topic).get(index);
+                var member = db.getRegisteredMembers(topic).get(index);
 
                 if (me.equals(member)) {
                     envelope.payload = message;
@@ -221,10 +220,10 @@ module.exports = {
             }
         } else if(delivery === DeliveryType.RANDOM) {
 
-            if (!registry.getRegisteredMembers(topic).isEmpty()) {
-                var index = Math.random() * registry.getRegisteredMembers(topic).size();
+            if (!db.getRegisteredMembers(topic).isEmpty()) {
+                var index = Math.random() * db.getRegisteredMembers(topic).size();
 
-                var member = registry.getRegisteredMembers(topic).get(index);
+                var member = db.getRegisteredMembers(topic).get(index);
 
                 if (me.equals(member)) {
                     envelope.payload = message;
@@ -237,7 +236,7 @@ module.exports = {
                 member.send(envelope);
             }
         } else if(delivery == DeliveryType.BROADCAST) {
-            var members = registry.getRegisteredMembers(topic);
+            var members = db.getRegisteredMembers(topic);
 
             if (me.equals(member)) {
                 envelope.payload = message;
@@ -259,20 +258,20 @@ module.exports = {
         var partition = 'partition' in obj ? obj['partition'] : '.*';
         var consumer = obj['listener'];
 
-        registry.registerMemberForTopic(topic, partition, me);
-        registry.addLocalListener(topic, partition, consumer);
+        db.registerMemberForTopic(topic, partition, me);
+        db.addLocalListener(topic, partition, consumer);
     },
 
     removeAllListeners: function (topic) {
-        registry.removeAllLocalListeners(topic);
+        db.removeAllLocalListeners(topic);
     },
 
     listMembers: function () {
-        return MemberHolder.getActiveMembers();
+        return db.getActiveMembers();
     },
 
     addInterceptor: function (topic, interceptor) {
-        registry.addInterceptor(topic, interceptor);
+        db.addInterceptor(topic, interceptor);
     },
 
     getMe: function () {
@@ -302,14 +301,14 @@ var connect = function(config, cb) {
     me = new MeMember(config);
     me.status = MemberStatus.Alive;
     me.initialize(function() {
-        MemberHolder.updateMemberStatus(me);
+        db.updateMemberStatus(me);
 
         me.addGossipConsumer(function(message) {
             handleGossipMessage(message);
         });
 
         discovery.initialize(me, config, function() {
-            registry.initialize(me);
+            db.initialize(me);
             gossiper.initialize(me, config);
             cb();
         });
@@ -329,7 +328,7 @@ var handleGossipMessage = function(message) {
     for(var i in memberKeys) {
         var index = memberKeys[i];
         var key = message.members[index];
-        var m = MemberHolder.members[key];
+        var m = db.members[key];
 
         if(m == undefined) {
             var protocol = config['protocol'];
@@ -350,7 +349,7 @@ var handleGossipMessage = function(message) {
             m.status = MemberStatus.Alive;
         }
 
-        MemberHolder.updateMemberStatus(m);
+        db.updateMemberStatus(m);
 
         var memberClock = message.clock[i];
         var knownMemberClock = m.sequence;
@@ -367,7 +366,7 @@ var handleGossipMessage = function(message) {
             }
 
             var toRemove = [];
-            var regs = registry.getAllRegistrations();
+            var regs = db.getAllRegistrations();
             for(var indx in regs) {
                 if(regs[indx].member.equals(m)) {
                     var name = utils.getTopicString(regs[indx].topic, regs[indx].partition);
@@ -376,13 +375,13 @@ var handleGossipMessage = function(message) {
                     }
                 }
             }
-            registry.removeRegistrations(toRemove);
+            db.removeRegistrations(toRemove);
 
             for(var indx in topics) {
                 var topic = utils.getTopic(topics[indx]);
                 var partition = utils.getPartition(topics[indx]);
 
-                var mems = registry.getRegisteredMembers(topic);
+                var mems = db.getRegisteredMembers(topic);
                 var found = false;
                 for(var k in mems) {
                     if(m.equals(mems[k].member)) {
@@ -391,14 +390,14 @@ var handleGossipMessage = function(message) {
                 }
 
                 if(!found) {
-                    registry.registerMemberForTopic(topic, partition, m);
+                    db.registerMemberForTopic(topic, partition, m);
                 }
             }
         }
     }
 
     if(updateTags) {
-        var m = MemberHolder.getMember(senderKey);
+        var m = db.getMember(senderKey);
         m.tags = [];
         for(var tag in message.tags) {
             m.tags.push(tag);
