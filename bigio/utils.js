@@ -31,13 +31,10 @@
 var logger = require('winston');
 var net = require('net');
 var os = require('os');
-var config = require('./config');
 
 var OperatingSystem = {
     WIN_64 : 0, WIN_32 : 1, LINUX_64 : 2, LINUX_32 : 3, MAC_64 : 4, MAC_32 : 5
 };
-
-var NETWORK_INTERFACE_PROPERTY = "io.bigio.network";
 
 var nic = null;
 var inetAddress = null;
@@ -49,6 +46,8 @@ var END_PORT = 65536;
 var NUM_CANDIDATES = END_PORT - START_PORT + 1;
 var port;
 
+var config;
+
 /**
  * A utility class for working with topics and partitions.
  *
@@ -57,6 +56,10 @@ var port;
 module.exports = {
 
     ALL_PARTITIONS: ".*",
+
+    setConfiguration: function(cfg) {
+        config = cfg;
+    },
 
     getTopicString: function(topic, partition) {
         return topic + "(" + partition + ")";
@@ -107,7 +110,7 @@ module.exports = {
 
     getIp: function(cb) {
         if(ip == undefined) {
-            var nic = config.getInstance().getProperty(NETWORK_INTERFACE_PROPERTY);
+            var nic = config['nic'];
             if(nic == undefined) {
                 var interfaces = os.networkInterfaces();
                 var match;

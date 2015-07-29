@@ -36,26 +36,12 @@ var logger = new (winston.Logger)({
 });
 var events = require('events');
 var MemberStatus = require('./member-status');
-var config = require('../config');
 var registry = require('./listener-registry');
 var envelopeCodec = require('../codec/envelope-codec');
 var gossipCodec = require('../codec/gossip-codec');
 var genericCodec = require('../codec/generic-codec');
 
 var gossipReactor = new events.EventEmitter();
-
-var SSL_PROPERTY = "io.bigio.ssl";
-var DEFAULT_SSL = false;
-var SSL_SELFSIGNED_PROPERTY = "io.bigio.ssl.selfSigned";
-var DEFAULT_SELFSIGNED = true;
-var SSL_CERTCHAINFILE_PROPERTY = "io.bigio.ssl.certChainFile";
-var DEFAULT_CERTCHAINFILE = "conf/certChain.pem";
-var SSL_KEYFILE_PROPERTY = "io.bigio.ssl.keyFile";
-var DEFAULT_KEYFILE = "conf/keyfile.pem";
-var SSL_KEYPASSWORD_PROPERTY = "io.bigio.ssl.keyPassword";
-
-var ENCRYPTION_PROPERTY = "io.bigio.encryption";
-var DEFAULT_ENCRYPTION = false;
 
 var GOSSIP_TOPIC = "__gossiper";
 var DECODE_TOPIC = "__decoder";
@@ -64,21 +50,21 @@ var symmetricCipher = undefined;
 var rsaCipher = undefined;
 var keyPair = undefined;
 
-var useEncryption = config.getInstance().getProperty(ENCRYPTION_PROPERTY, DEFAULT_ENCRYPTION);
-var useSSL = config.getInstance().getProperty(SSL_PROPERTY, DEFAULT_SSL);
-var useSelfSigned = config.getInstance().getProperty(SSL_SELFSIGNED_PROPERTY, DEFAULT_SELFSIGNED);
-var certChainFile = config.getInstance().getProperty(SSL_CERTCHAINFILE_PROPERTY, DEFAULT_CERTCHAINFILE);
-var keyFile = config.getInstance().getProperty(SSL_KEYFILE_PROPERTY, DEFAULT_KEYFILE);
-var keyPassword = config.getInstance().getProperty(SSL_KEYPASSWORD_PROPERTY);
-
 var gossipServer;
 var dataServer;
 
-var MeMember = function(ip, gossipPort, dataPort, useTCP) {
-    this.ip = ip;
-    this.dataPort = dataPort;
-    this.gossipPort = gossipPort;
-    this.useTCP = useTCP;
+//var MeMember = function(ip, gossipPort, dataPort, useTCP) {
+var MeMember = function(config) {
+    this.ip = config['ip'];
+    this.dataPort = config['dataPort'];
+    this.gossipPort = config['gossipPort'];
+    this.useTCP = config['protocol'] == 'tcp' ? true : false;
+    this.useEncryption = config['encrypt'] ? true : false;
+    this.useSSL = config['ssl'] ? true : false;
+    this.useSelfSigned = config['selfSigned'] ? true : false;
+    this.certChainFile = config['certChainFile'];
+    this.keyFile = config['keyFile'];
+    this.keyPassword = config['keyFilePassword'];
 };
 
 MeMember.prototype.tags = {};

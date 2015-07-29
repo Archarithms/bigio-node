@@ -10,7 +10,7 @@ function intercept() { }
 function listener() { }
 
 describe('listener-registry', function() {
-    me = new me_member('127.0.0.1', 9999, 9998, true);
+    me = new me_member({ip: '127.0.0.1', gossipPort: 9999, dataPort: 9998, protocol: 'tcp'});
     registry.initialize(me);
     key = utils.getKey({ member: me });
 

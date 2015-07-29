@@ -7,7 +7,7 @@ describe('message-test', function() {
         this.slow(1000);
         it('should send and receive messages locally', function(done) {
             var bigio = require('../bigio/bigio');
-            bigio.initialize(function() {
+            bigio.initialize({}, function() {
                 bigio.addListener({
                     topic: 'testTopic',
                     listener: function(message) {
@@ -30,7 +30,7 @@ describe('message-test', function() {
     describe('#local-partition-test', function() {
         it('should send and receive messages locally on a partition', function(done) {
             var bigio = require('../bigio/bigio');
-            bigio.initialize(function() {
+            bigio.initialize({}, function() {
                 bigio.addListener({
                     topic: 'testTopic',
                     partition: 'testPartition',
@@ -56,7 +56,7 @@ describe('message-test', function() {
         this.slow(2000);
         it('should not receive messages cross partitions', function(done) {
             var bigio = require('../bigio/bigio');
-            bigio.initialize(function() {
+            bigio.initialize({}, function() {
                 bigio.addListener({
                     topic: 'testTopic',
                     partition: 'testPartition',

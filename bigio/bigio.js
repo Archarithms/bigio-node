@@ -27,11 +27,6 @@
  * either expressed or implied, of the FreeBSD Project.
  */
 
-var PROTOCOL_PROPERTY = "io.bigio.protocol";
-var DEFAULT_PROTOCOL = "tcp";
-var GOSSIP_PORT_PROPERTY = "io.bigio.port.gossip";
-var DATA_PORT_PROPERTY = "io.bigio.port.data";
-
 var winston = require('winston')
 var logger = new (winston.Logger)({
     transports: [
@@ -40,14 +35,13 @@ var logger = new (winston.Logger)({
     ]
 });
 
-var me; // type MeMember
+var me;
 
-var deliveries = {}; // type Map<String, DeliveryType>
-var roundRobinIndex = {}; // type Map<String, Integer>
+var deliveries = {};
+var roundRobinIndex = {};
 
 var shuttingDown = false;
 
-var config = require('./config');
 var utils = require('./utils');
 var MeMember = require('./member/me-member');
 var RemoteMember = require('./member/remote-member');
@@ -75,34 +69,81 @@ var DeliveryType = {
     RANDOM : 2
 }
 
+var defaultConfiguration = {
+    protocol: 'tcp',
+    encrypt: false,
+    ssl: false,
+    selfSigned: false,
+    maxRetry: 3,
+    retryInterval: 3000,
+    connectionTimeout: 5000,
+    useMulticast: true,
+    multicastGroup: '239.0.0.1',
+    multicastPort: 8989,
+    gossipInterval: 250,
+    cleanupInterval: 10000
+}
+
+var config;
+
 module.exports = {
 
-    initialize: function (cb) {
-        var protocol = config.getInstance().getProperty(PROTOCOL_PROPERTY, DEFAULT_PROTOCOL);
-        var gossipPort = config.getInstance().getProperty(GOSSIP_PORT_PROPERTY);
-        var dataPort = config.getInstance().getProperty(DATA_PORT_PROPERTY);
+    initialize: function (params, cb) {
+        // No parameters specified
+        if(typeof params === 'function' || typeof params === 'undefined') {
+            cb = params;
+            params = defaultConfiguration;
+        } else {
+            var keys = Object.keys(defaultConfiguration);
+            for(var k in keys) {
+                var key = keys[k];
+                if(!(key in params)) {
+                    params[key] = defaultConfiguration[key];
+                }
+            }
+        }
+
+        config = params
+
+        utils.setConfiguration(config);
+
+        var dataPort = config['dataPort'];
         var address;
 
-        if (gossipPort == null) {
-            logger.debug("Finding a random port for gossiping.");
-            gossipPort = utils.getFreePort(function (err, port) {
-                gossipPort = port;
-                logger.debug("Using port " + gossipPort + " for gossiping.");
-
-                if (dataPort == null) {
-                    logger.debug("Finding a random port for data.");
-                    dataPort = utils.getFreePort(function (err, port) {
-                        dataPort = port;
-                        logger.debug("Using port " + dataPort + " for data.");
-                        utils.getIp(function (err, ip) {
-                            address = ip;
-                            logger.debug("Greetings. I am " + address + ":" + gossipPort + ":" + dataPort);
-                            connect(protocol, address, gossipPort, dataPort, cb);
-                        });
-                    });
-                }
-            });
+        function getGossipPort(done) {
+            if (!config['gossipPort']) {
+                logger.debug("Finding a random port for gossiping.");
+                utils.getFreePort(function(err, port) {
+                    config['gossipPort'] = port;
+                    logger.debug("Using port " + port + " for gossiping.");
+                    done();
+                });
+            } else {
+                done();
+            }
         }
+
+        function getDataPort(done) {
+            if (!config['dataPort']) {
+                logger.debug("Finding a random port for data.");
+                utils.getFreePort(function(err, port) {
+                    config['dataPort'] = port;
+                    logger.debug("Using port " + port + " for data.");
+                    done();
+                });
+            } else {
+                done();
+            }
+        }
+
+        getGossipPort(function() {
+            getDataPort(function() {
+                utils.getIp(function(err, ip) {
+                    config['ip'] = ip;
+                    connect(config, cb);
+                });
+            });
+        });
 
         process.on('SIGINT', function() {
             logger.info("Goodbye");
@@ -250,16 +291,16 @@ module.exports = {
     }
 }
 
-var connect = function(protocol, address, gossipPort, dataPort, cb) {
+//var connect = function(protocol, address, gossipPort, dataPort, cb) {
+var connect = function(config, cb) {
 
-    if("udp" == protocol) {
+    if('udp' === config['protocol']) {
         logger.info("Running over UDP");
-        me = new MeMember(address, gossipPort, dataPort, false);
     } else {
         logger.info("Running over TCP");
-        me = new MeMember(address, gossipPort, dataPort, true);
     }
 
+    me = new MeMember(config);
     me.status = MemberStatus.Alive;
     me.initialize(function() {
         MemberHolder.updateMemberStatus(me);
@@ -268,11 +309,9 @@ var connect = function(protocol, address, gossipPort, dataPort, cb) {
             handleGossipMessage(message);
         });
 
-        discovery.initialize(me, function() {
+        discovery.initialize(me, config, function() {
             registry.initialize(me);
-
-            gossiper.initialize(me);
-
+            gossiper.initialize(me, config);
             cb();
         });
     });
@@ -294,14 +333,13 @@ var handleGossipMessage = function(message) {
         var m = MemberHolder.members[key];
 
         if(m == undefined) {
-            var protocol = config.getInstance().getProperty(PROTOCOL_PROPERTY, DEFAULT_PROTOCOL);
+            var protocol = config['protocol'];
             if("udp" == protocol) {
                 logger.debug("Discovered new UDP member through gossip: " + message.ip + ":" + message.gossipPort + ":" + message.dataPort);
-                m = new RemoteMember(message.ip, message.gossipPort, message.dataPort, false);
             } else {
                 logger.debug("Discovered new TCP member through gossip: " + message.ip + ":" + message.gossipPort + ":" + message.dataPort);
-                m = new RemoteMember(message.ip, message.gossipPort, message.dataPort, true);
             }
+            m = new RemoteMember(message.ip, message.gossipPort, message.dataPort, config);
             var values = key.split(":");
             m.ip = values[0];
             m.gossipPort = values[1];

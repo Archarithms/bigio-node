@@ -37,7 +37,6 @@ var logger = new (winston.Logger)({
 
 var memberHolder = require('./member-holder');
 var MemberStatus = require('./member-status');
-var config = require('../config');
 var gossipCodec = require('../codec/gossip-codec');
 var envelopeCodec = require('../codec/envelope-codec');
 
@@ -46,33 +45,16 @@ var envelopeCodec = require('../codec/envelope-codec');
  *
  * @author Andy Trimble
  */
-var RemoteMember = function(ip, gossipPort, dataPort, useTCP) {
+var RemoteMember = function(ip, gossipPort, dataPort, config) {
 
     this.ip = ip;
     this.dataPort = dataPort;
     this.gossipPort = gossipPort;
-    this.useTCP = useTCP;
+    this.useTCP = config['protocol'] == 'tcp' ? true : false;
 
-    var MAX_RETRY_COUNT_PROPERTY = "io.bigio.remote.maxRetry";
-    var RETRY_INTERVAL_PROPERTY = "io.bigio.remote.retryInterval";
-    var CONNECTION_TIMEOUT_PROPERTY = "io.bigio.remote.connectionTimeout";
-    var DEFAULT_MAX_RETRY_COUNT = 3;
-    var DEFAULT_RETRY_INTERVAL = 2000;
-    var DEFAULT_CONNECTION_TIMEOUT = 5000;
-
-    var SSL_PROPERTY = "io.bigio.ssl";
-    var DEFAULT_SSL = false;
-    var SSL_SELFSIGNED_PROPERTY = "io.bigio.ssl.selfSigned";
-    var DEFAULT_SELFSIGNED = true;
-    var SSL_CERTCHAINFILE_PROPERTY = "io.bigio.ssl.certChainFile";
-    var DEFAULT_CERTCHAINFILE = "conf/certChain.pem";
-    var SSL_KEYFILE_PROPERTY = "io.bigio.ssl.keyFile";
-    var DEFAULT_KEYFILE = "conf/keyfile.pem";
-    var SSL_KEYPASSWORD_PROPERTY = "io.bigio.ssl.keyPassword";
-
-    var maxRetry = config.getInstance().getProperty(MAX_RETRY_COUNT_PROPERTY, DEFAULT_MAX_RETRY_COUNT);
-    var retryInterval = config.getInstance().getProperty(RETRY_INTERVAL_PROPERTY, DEFAULT_RETRY_INTERVAL);
-    var timeout = config.getInstance().getProperty(CONNECTION_TIMEOUT_PROPERTY, DEFAULT_CONNECTION_TIMEOUT);
+    var maxRetry = config['maxRetry'];
+    var retryInterval = config['retryInterval'];
+    var timeout = config['connectionTimeout'];
 
     var cipher = undefined;
     var symmetricCipher = undefined;
@@ -82,11 +64,11 @@ var RemoteMember = function(ip, gossipPort, dataPort, useTCP) {
     var gossipSocket;
     var dataClient;
 
-    var useSSL = config.getInstance().getProperty(SSL_PROPERTY, DEFAULT_SSL);
-    var useSelfSigned = config.getInstance().getProperty(SSL_SELFSIGNED_PROPERTY, DEFAULT_SELFSIGNED);
-    var certChainFile = config.getInstance().getProperty(SSL_CERTCHAINFILE_PROPERTY, DEFAULT_CERTCHAINFILE);
-    var keyFile = config.getInstance().getProperty(SSL_KEYFILE_PROPERTY, DEFAULT_KEYFILE);
-    var keyPassword = config.getInstance().getProperty(SSL_KEYPASSWORD_PROPERTY);
+    var useSSL = config['ssl'] ? true : false;
+    var useSelfSigned = config['selfSigned'] ? true : false;
+    var certChainFile = config['certChainFile'];
+    var keyFile = config['keyFile'];
+    var keyPassword = config['keyFilePassword'];
 
     var gossipConnected = false;
     var dataConnected = false;

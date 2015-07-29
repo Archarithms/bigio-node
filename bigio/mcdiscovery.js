@@ -34,7 +34,6 @@ var logger = new (winston.Logger)({
         //new (winston.transports.File)({ filename: 'somefile.log' })
     ]
 });
-var config = require('./config');
 var gossipCodec = require('./codec/gossip-codec');
 var holder = require('./member/member-holder');
 var MemberStatus = require('./member/member-status');
@@ -42,24 +41,11 @@ var RemoteMember = require('./member/remote-member');
 var utils = require('./utils');
 var dgram = require('dgram');
 
-var MULTICAST_ENABLED_PROPERTY = "io.bigio.multicast.enabled";
-var MULTICAST_GROUP_PROPERTY = "io.bigio.multicast.group";
-var MULTICAST_PORT_PROPERTY = "io.bigio.multicast.port";
-var DEFAULT_MULTICAST_GROUP = "239.0.0.1";
-var DEFAULT_MULTICAST_PORT = 8989;
-var PROTOCOL_PROPERTY = "io.bigio.protocol";
-var DEFAULT_PROTOCOL = "tcp";
-var NETWORK_INTERFACE_PROPERTY = "io.bigio.network";
-
-var enabled = config.getInstance().getProperty(MULTICAST_ENABLED_PROPERTY, "true");
-var multicastGroup = config.getInstance().getProperty(MULTICAST_GROUP_PROPERTY, DEFAULT_MULTICAST_GROUP);
-var multicastPort = config.getInstance().getProperty(MULTICAST_PORT_PROPERTY, DEFAULT_MULTICAST_PORT);
-var protocol = config.getInstance().getProperty(PROTOCOL_PROPERTY, DEFAULT_PROTOCOL);
-var nic = config.getInstance().getProperty(NETWORK_INTERFACE_PROPERTY);
-
 var me;
 var server;
 var client;
+
+var enabled, multicastGroup, multicastPort, protocol, nic;
 
 module.exports = {
 
@@ -108,7 +94,6 @@ module.exports = {
             holder.updateMemberStatus(member);
         });
 
-
         client.on('listening', function () {
             logger.info('Listening on MC port ' + multicastPort + ' and group ' + multicastGroup);
         });
@@ -116,6 +101,7 @@ module.exports = {
         client.on('error', function (err) {
             logger.error('MC Discovery Error:\n' + err.stack);
         });
+
 
         client.bind(multicastPort, function () {
             client.addMembership(multicastGroup, nic);
@@ -127,8 +113,15 @@ module.exports = {
         });
     },
 
-    initialize: function(_me, cb) {
+    initialize: function(_me, config, cb) {
         me = _me;
+
+        enabled = config['useMulticast'];
+        multicastGroup = config['multicastGroup'];
+        multicastPort = config['multicastPort'];
+        protocol = config['protocol'];
+        nic = config['nic'];
+
         this.setupNetworking(cb);
     }
 };

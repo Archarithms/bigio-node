@@ -37,16 +37,9 @@ var logger = new (winston.Logger)({
 
 var MemberHolder = require('./member/member-holder');
 var registry = require('./member/listener-registry');
-var config = require('./config');
 var utils = require('./utils');
 
-var GOSSIP_INTERVAL_PROPERTY = "io.bigio.gossip.interval";
-var CLEANUP_INTERVAL_PROPERTY = "io.bigio.gossip.cleanup";
-var DEFAULT_GOSSIP_INTERVAL = 250;
-var DEFAULT_CLEANUP_INTERVAL = 10000;
-
-var gossipInterval = config.getInstance().getProperty(GOSSIP_INTERVAL_PROPERTY, DEFAULT_GOSSIP_INTERVAL);
-var cleanupInterval = config.getInstance().getProperty(CLEANUP_INTERVAL_PROPERTY, DEFAULT_CLEANUP_INTERVAL);
+var gossipInterval, cleanupInterval;
 
 var me;
 
@@ -60,8 +53,11 @@ module.exports = {
     /**
      * Start the gossiping task.
      */
-    initialize: function(me) {
+    initialize: function(me, config) {
         this.me = me;
+
+        gossipInterval = config['gossipInterval'];
+        cleanupInterval = config['cleanupInterval'];
 
         // start the periodic task
         setInterval(function() {
