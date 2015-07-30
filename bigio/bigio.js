@@ -260,9 +260,10 @@ module.exports = {
         var topic = obj['topic'];
         var partition = 'partition' in obj ? obj['partition'] : '.*';
         var consumer = obj['listener'];
+        var template = 'template' in obj ? obj['template'] : undefined;
 
         db.registerMemberForTopic(topic, partition, me);
-        db.addLocalListener(topic, partition, consumer);
+        db.addLocalListener(topic, partition, consumer, template);
     },
 
     removeAllListeners: function (topic) {

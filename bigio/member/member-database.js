@@ -46,6 +46,8 @@ module.exports = {
 
     map: {},
 
+    templates: {},
+
     /**
      * Add a topic interceptor.
      *
@@ -84,8 +86,14 @@ module.exports = {
      * @param partition a partition.
      * @param listener a listener.
      */
-    addLocalListener: function(topic, partition, listener) {
+    addLocalListener: function(topic, partition, listener, template) {
         this.reactor.addListener(utils.getTopicString(topic, partition), listener);
+
+        if(template) {
+            if(!(topic in this.templates)) {
+                this.templates[topic] = template;
+            }
+        }
     },
 
     /**
@@ -214,6 +222,16 @@ module.exports = {
             for(var index in this.interceptors[envelope.topic]) {
                 envelope = this.interceptors[envelope.topic][index](envelope);
             }
+        }
+
+        if(envelope.topic in this.templates) {
+            var template = this.templates[envelope.topic];
+            var conv = {};
+            var keys = Object.keys(template);
+            for(var idx in keys) {
+                conv[keys[idx]] = envelope.message[idx];
+            }
+            envelope.message = conv;
         }
 
         if(envelope.executeTime > 0) {
