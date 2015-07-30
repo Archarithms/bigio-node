@@ -45,7 +45,7 @@ var RemoteMember = function(ip, gossipPort, dataPort, config) {
     this.ip = ip;
     this.dataPort = dataPort;
     this.gossipPort = gossipPort;
-    this.useTCP = config.protocol == 'tcp' ? true : false;
+    this.useTCP = config.protocol === 'tcp' ? true : false;
 
     var maxRetry = config.maxRetry;
     var retryInterval = config.retryInterval;
@@ -129,8 +129,7 @@ RemoteMember.prototype.initialize = function() {
     } else if (this.useTCP) {
         var net = require('net');
 
-        this.gossipSocket = new net.Socket();
-        this.gossipSocket.connect(this.gossipPort, this.ip, function () {
+        this.gossipSocket = net.connect({port: this.gossipPort, host: this.ip}, function() {
             logger.debug('TCP gossip socket connected with remote member ' + self.ip + ':' + self.gossipPort);
             self.gossipConnected = true;
         });
@@ -201,7 +200,7 @@ RemoteMember.prototype.initialize = function() {
  */
 RemoteMember.prototype.send = function(message) {
     var bytes = envelopeCodec.encode(message);
-    this.dataClient.write(bytes);
+    this.dataClient.send(bytes, 0, bytes.length, this.dataPort, this.ip);
 };
 
 /**
@@ -211,7 +210,7 @@ RemoteMember.prototype.send = function(message) {
 RemoteMember.prototype.gossip = function(message) {
     if (this.gossipConnected) {
         var bytes = gossipCodec.encode(message);
-        this.gossipSocket.write(bytes);
+        this.gossipSocket.send(bytes, 0, bytes.length, this.gossipPort, this.ip);
     }
 };
 

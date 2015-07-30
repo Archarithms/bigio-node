@@ -40,6 +40,7 @@ var server;
 var client;
 
 var enabled, multicastGroup, multicastPort, protocol, nic;
+var config;
 
 module.exports = {
 
@@ -64,13 +65,12 @@ module.exports = {
             if (member === undefined) {
                 if ("udp" == protocol) {
                     logger.debug("Discovered new UDP member: " + message.ip + ":" + message.gossipPort + ":" + message.dataPort);
-                    member = new RemoteMember(message.ip, message.gossipPort, message.dataPort, false);
-                    member.status = MemberStatus.Alive;
                 } else {
                     logger.debug("Discovered new TCP member: " + message.ip + ":" + message.gossipPort + ":" + message.dataPort);
-                    member = new RemoteMember(message.ip, message.gossipPort, message.dataPort, true);
-                    member.status = MemberStatus.Alive;
                 }
+
+                member = new RemoteMember(message.ip, message.gossipPort, message.dataPort, config);
+                member.status = MemberStatus.Alive;
 
                 if (message.publicKey !== undefined) {
                     member.publicKey = message.publicKey;
@@ -107,8 +107,9 @@ module.exports = {
         });
     },
 
-    initialize: function(_me, config, cb) {
+    initialize: function(_me, cfg, cb) {
         me = _me;
+        config = cfg;
 
         enabled = config.useMulticast;
         multicastGroup = config.multicastGroup;

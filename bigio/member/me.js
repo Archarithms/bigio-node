@@ -279,7 +279,7 @@ MeMember.prototype.initialize = function(cb) {
 
         });
         dataServer.on('message', function (data, rinfo) {
-            var message = envelopedecoder.decode(data);
+            var message = envelopeCodec.decode(data.slice(2, data.length));
             message.decoded = false;
             self.send(message);
         });

@@ -44,7 +44,6 @@ module.exports = {
         var message = {};
 
         var buff = bl(bytes);
-        //buff.consume(2);
         var unpacked = [];
 
         while(buff.length > 0) {

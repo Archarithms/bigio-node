@@ -3,13 +3,13 @@ var assert = chai.assert;
 var expect = chai.expect;
 
 describe('message-test', function() {
-    describe('#local-message-test', function() {
+    describe('#tcp-message-test', function() {
         this.slow(1000);
-        it('should send and receive messages locally', function(done) {
+        it('should send and receive messages', function(done) {
             var bigio = require('../bigio/bigio');
             bigio.initialize({}, function() {
                 bigio.addListener({
-                    topic: 'testTopic',
+                    topic: 'tcpTestTopic',
                     listener: function(message) {
                         expect(message).to.have.length(1);
                         expect(message[0]).to.equal('this is a test');
@@ -20,14 +20,39 @@ describe('message-test', function() {
                 });
 
                 bigio.send({
-                    topic: 'testTopic',
+                    topic: 'tcpTestTopic',
                     message: { value: 'this is a test' }
                 });
             });
         });
     });
 
-    describe('#local-partition-test', function() {
+    describe('#udp-message-test', function() {
+        this.slow(1000);
+        it('should send and receive messages', function(done) {
+            var bigio = require('../bigio/bigio');
+            bigio.initialize({protocol: 'udp'}, function() {
+                bigio.addListener({
+                    topic: 'udpTestTopic',
+                    listener: function(message) {
+                        expect(message).to.have.length(1);
+                        expect(message[0]).to.equal('this is a test');
+                        bigio.shutdown(function() {
+                            done();
+                        });
+                    }
+                });
+
+                bigio.send({
+                    topic: 'udpTestTopic',
+                    message: { value: 'this is a test' }
+                });
+            });
+        });
+    });
+
+
+    describe('#partition-test', function() {
         it('should send and receive messages locally on a partition', function(done) {
             var bigio = require('../bigio/bigio');
             bigio.initialize({}, function() {
@@ -52,7 +77,7 @@ describe('message-test', function() {
         });
     });
 
-    describe('#local-partition-fail', function() {
+    describe('#partition-fail', function() {
         this.slow(2000);
         it('should not receive messages cross partitions', function(done) {
             var bigio = require('../bigio/bigio');

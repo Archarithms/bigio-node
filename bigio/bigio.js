@@ -148,7 +148,7 @@ module.exports = {
 
         process.on('SIGINT', function() {
             logger.info("Goodbye");
-            cluster.shutdown(function() {
+            require('./bigio').shutdown(function() {
                 process.exit();
             });
         });
