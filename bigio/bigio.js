@@ -45,19 +45,11 @@ var roundRobinIndex = {};
 var shuttingDown = false;
 
 var DeliveryType = {
-    /**
-     * Broadcast messages to all known receives.
-     */
+    // Broadcast messages to all known receives.
     BROADCAST : 0,
-
-    /**
-     * Send messages to the set of known receives in a round-robin manner.
-     */
+    // Send messages to the set of known receives in a round-robin manner.
     ROUND_ROBIN : 1,
-
-    /**
-     * Send messages to randomly selected receivers.
-     */
+    // Send messages to randomly selected receivers.
     RANDOM : 2
 };
 
@@ -81,6 +73,13 @@ var config;
 
 module.exports = {
 
+    /**
+     * Initialize BigIO. This function should be called before any further
+     * usage. When the callback is invoked, the BigIO system is initialized
+     * and ready for use.
+     * @param {Object} params the configuration object (optional).
+     * @param {function} cb the callback function.
+     */
     initialize: function (params, cb) {
         // No parameters specified
         if(typeof params === 'function' || typeof params === 'undefined') {
@@ -155,6 +154,10 @@ module.exports = {
         });
     },
 
+    /**
+     * Shutdown the BigIO system.
+     * @param {function} cb the callback.
+     */
     shutdown: function (cb) {
         shuttingDown = true;
 
@@ -177,6 +180,30 @@ module.exports = {
         });
     },
 
+    /**
+     * Send a message. The parameter object takes the following form:
+     * {
+     *     // The topic across which to send this message.
+     *     topic: "topic name",
+     *
+     *     // Optional: the partition across which to send this message.
+     *     partition: "partition name",
+     *
+     *     // The actual message to encode and send.
+     *     message: { ... },
+     *
+     *     // Optional: a message type for integration with other languages.
+     *     // An example is interfacing with Java. The Java BigIO implementation
+     *     // requires a well defined class describing the message.
+     *     type: "message type",
+     *
+     *     // Optional: an offset time if the message should be sent in the
+     *     // future. If left out, the message will be sent immediately.
+     *     offsetMilliseconds: 1000,
+     * }
+     *
+     * @param {Object} obj the information necessary to send the message.
+     */
     send: function (obj) {
         var topic = obj.topic;
         var partition = 'partition' in obj ? obj.partition : '.*';
@@ -263,6 +290,23 @@ module.exports = {
         }
     },
 
+    /**
+     * Add a message listener. The parameter object takes the following form:
+     * {
+     *     // The name of the topic.
+     *     topic: "a topic identifier",
+     *
+     *     // Optional: the name of the partition.
+     *     partition: "some partition",
+     *
+     *     // The function to be called with a received Message
+     *     listener: function(message) { ... },
+     *
+     *     // Optional: the template structure for received messages
+     *     template: { ... }
+     * }
+     * @param {Object} the parameters of the listener.
+     */
     addListener: function (obj) {
         var topic = obj.topic;
         var partition = 'partition' in obj ? obj.partition : '.*';
@@ -273,26 +317,20 @@ module.exports = {
         db.addLocalListener(topic, partition, consumer, template);
     },
 
-    removeAllListeners: function (topic) {
-        db.removeAllLocalListeners(topic);
-    },
-
-    listMembers: function () {
-        return db.getActiveMembers();
-    },
-
+    /**
+     * Add a message interceptor.
+     * @param {String} topic the topic on which to add the interceptor.
+     * @param {function} interceptor the intercepting function.
+     */
     addInterceptor: function (topic, interceptor) {
         db.addInterceptor(topic, interceptor);
     },
 
-    getMe: function () {
-        return me;
-    },
-
-    getTags: function () {
-        return me.getTags();
-    },
-
+    /**
+     * Set the delivery type for a topic.
+     * @param {String} a topic
+     * @param {int} the type of delivery.
+     */
     setDeliveryType: function (topic, type) {
         deliveries[topic] = type;
         if (type == DeliveryType.ROUND_ROBIN) {

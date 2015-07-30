@@ -34,11 +34,6 @@ var utils = require('../utils');
 
 var me;
 
-/**
- * A class for managing listener registrations.
- *
- * @author Andy Trimble
- */
 module.exports = {
     interceptors: {},
 
@@ -51,8 +46,8 @@ module.exports = {
     /**
      * Add a topic interceptor.
      *
-     * @param topic a topic.
-     * @param interceptor an interceptor.
+     * @param {String} topic a topic.
+     * @param {function} interceptor an interceptor.
      */
     addInterceptor: function(topic, interceptor) {
         if(this.interceptors[topic] === undefined) {
@@ -64,7 +59,7 @@ module.exports = {
     /**
      * Set the current member.
      *
-     * @param me the current member.
+     * @param {Object} me the current member.
      */
     initialize: function(me) {
         this.me = me;
@@ -72,7 +67,7 @@ module.exports = {
 
     /**
      * Get the current member.
-     * @return the current member.
+     * @return {Object} the current member.
      */
     getMe: function() {
         return me;
@@ -81,10 +76,9 @@ module.exports = {
     /**
      * Add a listener that is located in the same VM as the current member.
      *
-     * @param <T> a message type.
-     * @param topic a topic.
-     * @param partition a partition.
-     * @param listener a listener.
+     * @param {String} topic a topic.
+     * @param {Strin} partition a partition.
+     * @param {function} listener a listener.
      */
     addLocalListener: function(topic, partition, listener, template) {
         this.reactor.addListener(utils.getTopicString(topic, partition), listener);
@@ -99,7 +93,7 @@ module.exports = {
     /**
      * Remove all local listeners on a given topic.
      *
-     * @param topic a topic.
+     * @param {String} topic a topic.
      */
     removeAllLocalListeners: function(topic) {
         var allRegs = this.map[me];
@@ -119,7 +113,7 @@ module.exports = {
     /**
      * Remove topic/partition registrations.
      *
-     * @param regs a set of registrations.
+     * @param {Object} regs a set of registrations.
      */
     removeRegistrations: function(regs) {
         for(var memberKey in this.map) {
@@ -132,7 +126,7 @@ module.exports = {
     /**
      * Get all topic/partition registrations.
      *
-     * @return the list of all registrations.
+     * @return {Array} the list of all registrations.
      */
     getAllRegistrations: function() {
         var ret = [];
@@ -152,8 +146,8 @@ module.exports = {
      * Get all members that have at least one listener registered for a given
      * topic.
      *
-     * @param topic a topic.
-     * @return all members that have at least one registered listener.
+     * @param {String} topic a topic.
+     * @return {Array} all members that have at least one registered listener.
      */
     getRegisteredMembers: function(topic) {
         var ret = [];
@@ -175,9 +169,9 @@ module.exports = {
     /**
      * Register a member for a topic-partition.
      *
-     * @param topic a topic.
-     * @param partition a partition.
-     * @param member a member.
+     * @param {String} topic a topic.
+     * @param {String} partition a partition.
+     * @param {Object} member a member.
      */
     registerMemberForTopic: function(topic, partition, member) {
 
@@ -214,8 +208,7 @@ module.exports = {
     /**
      * Send a message.
      *
-     * @param envelope a message envelope.
-     * @throws IOException in case of a sending error.
+     * @param {Object} envelope a message envelope.
      */
     send:function(envelope) {
         if(Object.keys(this.interceptors).indexOf(envelope.topic) >= 0) {
@@ -247,22 +240,38 @@ module.exports = {
     activeMembers: {},
     deadMembers: {},
 
+    /**
+     * Clear the set of members.
+     */
     clear: function() {
         this.members.clear();
         this.activeMembers.clear();
         this.deadMembers.clear();
     },
 
+    /**
+     * Get a member.
+     * @param {String} a key.
+     * @return {Object} a member
+     */
     getMember: function(key) {
         return this.members[key];
     },
 
+    /**
+     * Get all currently and previously known members.
+     * @return {Array} all members.
+     */
     getAllMembers: function() {
         var ret = [];
         ret.concat(this.members);
         return ret;
     },
 
+    /**
+     * Get the list of currently active members.
+     * @return {Array} all active members.
+     */
     getActiveMembers: function() {
         var ret = [];
         for(var m in this.activeMembers) {
@@ -271,6 +280,10 @@ module.exports = {
         return ret;
     },
 
+    /**
+     * Get the list of currently dead members.
+     * @return {Array} all dead members.
+     */
     getDeadMembers: function() {
         var ret = [];
         for(var m in this.deadMembers) {
@@ -279,6 +292,10 @@ module.exports = {
         return ret;
     },
 
+    /**
+     * Update the status of a member.
+     * @param {Object} member a member.
+     */
     updateMemberStatus: function(member) {
         var key = member.ip + ":" + member.gossipPort + ":" + member.dataPort;
 

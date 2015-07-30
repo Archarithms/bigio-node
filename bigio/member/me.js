@@ -45,7 +45,10 @@ var symmetricCipher, rsaCipher, keyPair;
 var gossipServer;
 var dataServer;
 
-//var MeMember = function(ip, gossipPort, dataPort, useTCP) {
+/**
+ * Construct a new member.
+ * @param {Object} config the configuration object.
+ */
 var MeMember = function(config) {
     this.ip = config.ip;
     this.dataPort = config.dataPort;
@@ -68,6 +71,10 @@ MeMember.prototype.gossipPort = -1;
 MeMember.prototype.useTCP = true;
 MeMember.prototype.publicKey = undefined;
 
+/**
+ * Get a pretty string.
+ * @return {String} a string representation.
+ */
 MeMember.prototype.toString = function() {
     var ret = "\nMember ";
     ret += this.ip;
@@ -95,16 +102,27 @@ MeMember.prototype.toString = function() {
     return ret;
 };
 
+/**
+ * Check the equality of two members.
+ * @param {Object} obj a member.
+ * @return {boolean} true if they are logically equal, false otherwise.
+ */
 MeMember.prototype.equals = function(obj) {
     var them = obj;
 
     return them !== undefined && them.ip === this.ip && them.gossipPort === this.gossipPort && them.dataPort === this.dataPort;
 };
 
+/**
+ * Empty gossip function to ensure compatibility with external member objects.
+ */
 MeMember.prototype.gossip = function(message) {
 
 };
 
+/**
+ * Shutdown this member cleanly.
+ */
 MeMember.prototype.shutdown = function(cb) {
     /* gossipServer.close(function(err) {
         console.log(err);
@@ -116,6 +134,10 @@ MeMember.prototype.shutdown = function(cb) {
     if(typeof cb === 'function') cb();
 };
 
+/**
+ * Initialize this member.
+ * @param {function} cb a callback.
+ */
 MeMember.prototype.initialize = function(cb) {
     logger.debug("Initializing gossip server on " + this.ip + ":" + this.gossipPort);
 
@@ -270,10 +292,18 @@ MeMember.prototype.initialize = function(cb) {
     }
 };
 
+/**
+ * Add a listener for gossip messages.
+ * @param {object} consumer a listener.
+ */
 MeMember.prototype.addGossipConsumer = function(consumer) {
     gossipReactor.addListener('gossip', consumer);
 };
 
+/**
+ * Send a message to local listeners.
+ * @param {Object} envelope an envelope.
+ */
 MeMember.prototype.send = function(envelope) {
     if(!envelope.decoded) {
         if(envelope.encrypted) {

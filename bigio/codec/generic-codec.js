@@ -32,19 +32,13 @@ var bl = require('bl');
 var bops = require('bops');
 var msgpack = require('msgpack5')();
 
-/**
- * This is a class for decoding gossip messages.
- *
- * @author Andy Trimble
- */
 module.exports = {
 
     /**
      * Decode a message.
      *
-     * @param bytes the raw message.
-     * @return the decoded message.
-     * @throws IOException in case of an error in decoding.
+     * @param {bytes} bytes the raw message.
+     * @return {Object} the decoded message.
      */
     decode: function (bytes) {
         var buff = bl(bytes);
@@ -72,9 +66,8 @@ module.exports = {
     /**
      * Encode a message payload.
      *
-     * @param message a message.
-     * @return the encoded form of the message.
-     * @throws IOException in case of an error in encoding.
+     * @param {Object} message a message.
+     * @return {bytes} the encoded form of the message.
      */
     encode: function(message) {
         var arr = [];

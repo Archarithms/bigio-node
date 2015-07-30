@@ -45,11 +45,6 @@ var port;
 
 var config;
 
-/**
- * A utility class for working with topics and partitions.
- *
- * @author Andy Trimble
- */
 module.exports = {
 
     ALL_PARTITIONS: ".*",

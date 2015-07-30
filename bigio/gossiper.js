@@ -35,15 +35,12 @@ var gossipInterval, cleanupInterval;
 
 var me;
 
-/**
- * This is the gossip protocol implementation.
- *
- * @author Andy Trimble
- */
 module.exports = {
 
     /**
      * Start the gossiping task.
+     * @param {Object} me the local member.
+     * @param {Object} config the configuration object.
      */
     initialize: function(me, config) {
         this.me = me;
@@ -115,6 +112,7 @@ module.exports = {
 
     /**
      * Shutdown the gossiping task.
+     * @param {function} the callback.
      */
     shutdown: function(cb) {
         // TODO: Gracefully shut down the gossip task

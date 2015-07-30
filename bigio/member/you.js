@@ -34,9 +34,11 @@ var gossipCodec = require('../codec/gossip-codec');
 var envelopeCodec = require('../codec/envelope-codec');
 
 /**
- * A TCP implementation of a remote BigIO cluster member.
- *
- * @author Andy Trimble
+ * Construct a new member.
+ * @param {String} ip the IP address of the member.
+ * @param {Integer} gossipPort the port on which to send gossip messages.
+ * @param {Integer} dataPort the port on which to send data messages.
+ * @param {Object} config the configuraiton object.
  */
 var RemoteMember = function(ip, gossipPort, dataPort, config) {
 
@@ -73,6 +75,10 @@ RemoteMember.prototype.gossipPort = -1;
 RemoteMember.prototype.useTCP = true;
 RemoteMember.prototype.publicKey = undefined;
 
+/**
+ * Get a pretty string.
+ * @return {String} a string representation.
+ */
 RemoteMember.prototype.toString = function() {
     var ret = "\nMember ";
     ret += this.ip;
@@ -100,12 +106,21 @@ RemoteMember.prototype.toString = function() {
     return ret;
 };
 
+/**
+ * Check the equality of two members.
+ * @param {Object} obj a member.
+ * @return {boolean} true if they are logically equal, false otherwise.
+ */
 RemoteMember.prototype.equals = function(obj) {
     var them = obj;
 
     return them.ip !== undefined && them.ip == this.ip && them.gossipPort == this.gossipPort && them.dataPort == this.dataPort;
 };
 
+/**
+ * Initialize this member.
+ * @param {function} cb a callback.
+ */
 RemoteMember.prototype.initialize = function() {
     var self = this;
 
@@ -180,11 +195,19 @@ RemoteMember.prototype.initialize = function() {
     }
 };
 
+/**
+ * Send a message to the remote member.
+ * @param {Object} envelope an envelope.
+ */
 RemoteMember.prototype.send = function(message) {
     var bytes = envelopeCodec.encode(message);
     this.dataClient.write(bytes);
 };
 
+/**
+ * Send a gossip message to the remote member.
+ * @param {Object} message a gossip message.
+ */
 RemoteMember.prototype.gossip = function(message) {
     if (this.gossipConnected) {
         var bytes = gossipCodec.encode(message);
@@ -192,6 +215,10 @@ RemoteMember.prototype.gossip = function(message) {
     }
 };
 
+/**
+ * Cleanly shut down this member.
+ * @param {function} cb a callback
+ */
 RemoteMember.prototype.shutdown = function(cb) {
     logger.debug("Closed remote sockets.");
     if (this.useTCP) {
