@@ -48,11 +48,6 @@ describe('listener-db', function() {
                 expect(list[0]['topic']).to.equal('topic2');
                 expect(list[0]['partition']).to.equal('partition2');
                 expect(list[0]['member']).to.equal(me);
-
-                /*
-                db.removeRegistrations(list[0]);
-                expect(db.map[key]['topic2']).to.have.length(0);
-                */
             });
         });
     });
