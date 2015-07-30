@@ -27,7 +27,7 @@
  * either expressed or implied, of the FreeBSD Project.
  */
 
-var logger = require('winston')
+var logger = require('winston');
 var db = require('./member/member-database');
 var utils = require('./utils');
 
@@ -48,14 +48,12 @@ module.exports = {
     initialize: function(me, config) {
         this.me = me;
 
-        gossipInterval = config['gossipInterval'];
-        cleanupInterval = config['cleanupInterval'];
+        gossipInterval = config.gossipInterval;
+        cleanupInterval = config.cleanupInterval;
 
         // start the periodic task
         setInterval(function() {
-            var member = undefined;
-
-            var chosenMember = undefined;
+            var member, chosenMember;
 
             var activeKeys = Object.keys(db.activeMembers);
             var activeMemberNum = activeKeys.length;
@@ -78,7 +76,7 @@ module.exports = {
                 member = chosenMember;
             }
 
-            if (member != undefined) {
+            if (member !== undefined) {
                 var memberList = {};
                 memberList.ip = me.ip;
                 memberList.gossipPort = me.gossipPort;
@@ -104,7 +102,7 @@ module.exports = {
                 var regs = db.getAllRegistrations();
                 for(var indx in regs) {
                     var key = regs[indx].member.ip + ":" + regs[indx].member.gossipPort + ":" + regs[indx].member.dataPort;
-                    if(memberList.eventListeners[key] == undefined) {
+                    if(memberList.eventListeners[key] === undefined) {
                         memberList.eventListeners[key] = [];
                     }
                     memberList.eventListeners[key].push(regs[indx].topic);

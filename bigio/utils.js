@@ -36,10 +36,7 @@ var OperatingSystem = {
     WIN_64 : 0, WIN_32 : 1, LINUX_64 : 2, LINUX_32 : 3, MAC_64 : 4, MAC_32 : 5
 };
 
-var nic = null;
-var inetAddress = null;
-
-var ip = undefined;
+var nic, inetAddress, ip;
 
 var START_PORT = 32768;
 var END_PORT = 65536;
@@ -109,9 +106,8 @@ module.exports = {
     },
 
     getIp: function(cb) {
-        if(ip == undefined) {
-            var nic = config['nic'];
-            if(nic == undefined) {
+        if(ip === undefined) {
+            if(config.nic === undefined) {
                 var interfaces = os.networkInterfaces();
                 var match;
 
@@ -135,8 +131,8 @@ module.exports = {
                 for(var intfc in interfaces) {
                     if(intfc.indexOf(match) > -1) {
                         for(var i in interfaces[intfc]) {
-                            if(interfaces[intfc][i]['family'] == 'IPv4') {
-                                ip = interfaces[intfc][i]['address'];
+                            if(interfaces[intfc][i].family == 'IPv4') {
+                                ip = interfaces[intfc][i].address;
                             }
                         }
                     }
@@ -151,7 +147,7 @@ module.exports = {
         port = Math.floor(Math.random() * NUM_CANDIDATES + START_PORT);
         nextPort(cb);
     }
-}
+};
 
 var nextPort = function(cb) {
     var server = net.createServer();
@@ -159,14 +155,14 @@ var nextPort = function(cb) {
     server.listen(port, function(err) {
         server.once('close', function() {
             cb(null, port);
-        })
+        });
         server.close();
     });
     server.on('error', function(err) {
         port = Math.floor(Math.random() * NUM_CANDIDATES + START_PORT);
         nextPort(cb);
-    })
-}
+    });
+};
 
 var currentOS = function() {
     var osName = os.platform();
@@ -195,4 +191,4 @@ var currentOS = function() {
     }
 
     return ret;
-}
+};

@@ -105,9 +105,10 @@ module.exports = {
 
         var keys = message.senderKey.split(':');
         var ip = keys[0].split('.');
+        var toPack;
 
         if(message.isEncrypted) {
-            var toPack = [
+            toPack = [
                 msgpack.encode(parseInt(ip[0])),
                 msgpack.encode(parseInt(ip[1])),
                 msgpack.encode(parseInt(ip[2])),
@@ -124,7 +125,7 @@ module.exports = {
                 msgpack.encode(message.payload)
             ];
         } else {
-            var toPack = [
+            toPack = [
                 msgpack.encode(parseInt(ip[0])),
                 msgpack.encode(parseInt(ip[1])),
                 msgpack.encode(parseInt(ip[2])),

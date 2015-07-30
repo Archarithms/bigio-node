@@ -27,7 +27,7 @@
  * either expressed or implied, of the FreeBSD Project.
  */
 
-var logger = require('winston')
+var logger = require('winston');
 var events = require('events');
 var MemberStatus = require('./member-status');
 var db = require('./member-database');
@@ -40,25 +40,23 @@ var gossipReactor = new events.EventEmitter();
 var GOSSIP_TOPIC = "__gossiper";
 var DECODE_TOPIC = "__decoder";
 
-var symmetricCipher = undefined;
-var rsaCipher = undefined;
-var keyPair = undefined;
+var symmetricCipher, rsaCipher, keyPair;
 
 var gossipServer;
 var dataServer;
 
 //var MeMember = function(ip, gossipPort, dataPort, useTCP) {
 var MeMember = function(config) {
-    this.ip = config['ip'];
-    this.dataPort = config['dataPort'];
-    this.gossipPort = config['gossipPort'];
-    this.useTCP = config['protocol'] == 'tcp' ? true : false;
-    this.useEncryption = config['encrypt'] ? true : false;
-    this.useSSL = config['ssl'] ? true : false;
-    this.useSelfSigned = config['selfSigned'] ? true : false;
-    this.certChainFile = config['certChainFile'];
-    this.keyFile = config['keyFile'];
-    this.keyPassword = config['keyFilePassword'];
+    this.ip = config.ip;
+    this.dataPort = config.dataPort;
+    this.gossipPort = config.gossipPort;
+    this.useTCP = config.protocol == 'tcp' ? true : false;
+    this.useEncryption = config.encrypt ? true : false;
+    this.useSSL = config.ssl ? true : false;
+    this.useSelfSigned = config.selfSigned ? true : false;
+    this.certChainFile = config.certChainFile;
+    this.keyFile = config.keyFile;
+    this.keyPassword = config.keyFilePassword;
 };
 
 MeMember.prototype.tags = {};
@@ -100,10 +98,7 @@ MeMember.prototype.toString = function() {
 MeMember.prototype.equals = function(obj) {
     var them = obj;
 
-    return them !== undefined
-        && them.ip === this.ip
-        && them.gossipPort === this.gossipPort
-        && them.dataPort === this.dataPort;
+    return them !== undefined && them.ip === this.ip && them.gossipPort === this.gossipPort && them.dataPort === this.dataPort;
 };
 
 MeMember.prototype.gossip = function(message) {
@@ -118,7 +113,7 @@ MeMember.prototype.shutdown = function(cb) {
             typeof cb === 'function' && cb();
         });
     }); */
-    typeof cb === 'function' && cb();
+    if(typeof cb === 'function') cb();
 };
 
 MeMember.prototype.initialize = function(cb) {
@@ -126,13 +121,12 @@ MeMember.prototype.initialize = function(cb) {
 
     var gossipListening = false;
     var dataListening = false;
+    var self = this;
 
     if (this.useSSL) {
         logger.info("Using SSL/TLS.");
     } else if(this.useTCP) {
         var net = require('net');
-
-        var self = this;
 
         gossipServer = net.createServer(function(sock) {
             logger.debug('TCP gossip server connected');
@@ -223,8 +217,6 @@ MeMember.prototype.initialize = function(cb) {
     } else {
         var dgram = require('dgram');
 
-        var self = this;
-
         gossipServer = dgram.createSocket('udp4');
 
         gossipServer.on('listening', function () {
@@ -280,7 +272,7 @@ MeMember.prototype.initialize = function(cb) {
 
 MeMember.prototype.addGossipConsumer = function(consumer) {
     gossipReactor.addListener('gossip', consumer);
-}
+};
 
 MeMember.prototype.send = function(envelope) {
     if(!envelope.decoded) {

@@ -27,7 +27,7 @@
  * either expressed or implied, of the FreeBSD Project.
  */
 
-var logger = require('winston')
+var logger = require('winston');
 var gossipCodec = require('./codec/gossip-codec');
 var db = require('./member/member-database');
 var MemberStatus = require('./member/member-status');
@@ -61,7 +61,7 @@ module.exports = {
 
             var member = db.getMember(key);
 
-            if (member == undefined) {
+            if (member === undefined) {
                 if ("udp" == protocol) {
                     logger.debug("Discovered new UDP member: " + message.ip + ":" + message.gossipPort + ":" + message.dataPort);
                     member = new RemoteMember(message.ip, message.gossipPort, message.dataPort, false);
@@ -72,7 +72,7 @@ module.exports = {
                     member.status = MemberStatus.Alive;
                 }
 
-                if (message.publicKey != undefined) {
+                if (message.publicKey !== undefined) {
                     member.publicKey = message.publicKey;
                 }
 
@@ -110,11 +110,11 @@ module.exports = {
     initialize: function(_me, config, cb) {
         me = _me;
 
-        enabled = config['useMulticast'];
-        multicastGroup = config['multicastGroup'];
-        multicastPort = config['multicastPort'];
-        protocol = config['protocol'];
-        nic = config['nic'];
+        enabled = config.useMulticast;
+        multicastGroup = config.multicastGroup;
+        multicastPort = config.multicastPort;
+        protocol = config.protocol;
+        nic = config.nic;
 
         this.setupNetworking(cb);
     }

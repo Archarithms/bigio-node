@@ -27,7 +27,7 @@
  * either expressed or implied, of the FreeBSD Project.
  */
 
-var logger = require('winston')
+var logger = require('winston');
 var db = require('./member-database');
 var MemberStatus = require('./member-status');
 var gossipCodec = require('../codec/gossip-codec');
@@ -43,25 +43,22 @@ var RemoteMember = function(ip, gossipPort, dataPort, config) {
     this.ip = ip;
     this.dataPort = dataPort;
     this.gossipPort = gossipPort;
-    this.useTCP = config['protocol'] == 'tcp' ? true : false;
+    this.useTCP = config.protocol == 'tcp' ? true : false;
 
-    var maxRetry = config['maxRetry'];
-    var retryInterval = config['retryInterval'];
-    var timeout = config['connectionTimeout'];
+    var maxRetry = config.maxRetry;
+    var retryInterval = config.retryInterval;
+    var timeout = config.connectionTimeout;
 
-    var cipher = undefined;
-    var symmetricCipher = undefined;
-    var secretKey = undefined;
-    var key = undefined;
+    var cipher, symmetricCipher, secretKey, key;
 
     var gossipSocket;
     var dataClient;
 
-    var useSSL = config['ssl'] ? true : false;
-    var useSelfSigned = config['selfSigned'] ? true : false;
-    var certChainFile = config['certChainFile'];
-    var keyFile = config['keyFile'];
-    var keyPassword = config['keyFilePassword'];
+    var useSSL = config.ssl ? true : false;
+    var useSelfSigned = config.selfSigned ? true : false;
+    var certChainFile = config.certChainFile;
+    var keyFile = config.keyFile;
+    var keyPassword = config.keyFilePassword;
 
     var gossipConnected = false;
     var dataConnected = false;
@@ -106,19 +103,16 @@ RemoteMember.prototype.toString = function() {
 RemoteMember.prototype.equals = function(obj) {
     var them = obj;
 
-    return them.ip != undefined
-        && them.ip == this.ip
-        && them.gossipPort == this.gossipPort
-        && them.dataPort == this.dataPort;
+    return them.ip !== undefined && them.ip == this.ip && them.gossipPort == this.gossipPort && them.dataPort == this.dataPort;
 };
 
 RemoteMember.prototype.initialize = function() {
+    var self = this;
+
     if (this.useSSL) {
 
     } else if (this.useTCP) {
         var net = require('net');
-
-        var self = this;
 
         this.gossipSocket = new net.Socket();
         this.gossipSocket.connect(this.gossipPort, this.ip, function () {
@@ -149,8 +143,6 @@ RemoteMember.prototype.initialize = function() {
         });
     } else {
         var dgram = require('dgram');
-
-        var self = this;
 
         this.gossipSocket = dgram.createSocket('udp4');
         this.gossipSocket.on('listening', function () {
@@ -183,7 +175,7 @@ RemoteMember.prototype.initialize = function() {
         this.dataClient.bind(this.dataPort, this.ip);
     }
 
-    if(this.publicKey != undefined) {
+    if(this.publicKey !== undefined) {
 
     }
 };
@@ -210,7 +202,7 @@ RemoteMember.prototype.shutdown = function(cb) {
         this.dataClient.close();
     }
 
-    typeof cb === 'function' && cb();
+    if(typeof cb === 'function') cb();
 };
 
 module.exports = RemoteMember;

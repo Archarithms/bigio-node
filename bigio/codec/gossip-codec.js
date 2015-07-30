@@ -75,9 +75,10 @@ module.exports = {
             message.publicKey = unpacked[index++];
         }
 
+        var key;
         var tagMap = unpacked[index++];
         message.tags = {};
-        for(var key in tagMap) {
+        for(key in tagMap) {
             message.tags[key] = tagMap[key];
         }
 
@@ -97,7 +98,7 @@ module.exports = {
 
         var tmpMap = unpacked[index++];
         message.eventListeners = {};
-        for(var key in tmpMap) {
+        for(key in tmpMap) {
             var tmpList = tmpMap[key];
             message.eventListeners[key] = tmpList;
         }
@@ -132,12 +133,13 @@ module.exports = {
         }
 
         var eventListeners = {};
-        for(key in message.eventListeners) {
+        for(var key in message.eventListeners) {
             eventListeners[key] = message.eventListeners[key];
         }
 
-        if(message.publicKey != undefined) {
-            var toPack = [
+        var toPack;
+        if(message.publicKey !== undefined) {
+            toPack = [
                 parseInt(splitIp[0]),
                 parseInt(splitIp[1]),
                 parseInt(splitIp[2]),
@@ -153,7 +155,7 @@ module.exports = {
                 eventListeners
             ];
         } else {
-            var toPack = [
+            toPack = [
                 parseInt(splitIp[0]),
                 parseInt(splitIp[1]),
                 parseInt(splitIp[2]),

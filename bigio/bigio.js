@@ -59,7 +59,7 @@ var DeliveryType = {
      * Send messages to randomly selected receivers.
      */
     RANDOM : 2
-}
+};
 
 var defaultConfiguration = {
     protocol: 'tcp',
@@ -75,7 +75,7 @@ var defaultConfiguration = {
     gossipInterval: 250,
     cleanupInterval: 10000,
     logLevel: 'info'
-}
+};
 
 var config;
 
@@ -96,27 +96,27 @@ module.exports = {
             }
         }
 
-        config = params
+        config = params;
 
-        logger.level = config['logLevel'];
+        logger.level = config.logLevel;
 
-        if(config['logFile']) {
+        if(config.logFile) {
             logger.add(logger.transports.File, {
-                filename: config['logFile'],
-                level: config['logLevel']
+                filename: config.logFile,
+                level: config.logLevel
             });
         }
 
         utils.setConfiguration(config);
 
-        var dataPort = config['dataPort'];
+        var dataPort = config.dataPort;
         var address;
 
         function getGossipPort(done) {
-            if (!config['gossipPort']) {
+            if (!config.gossipPort) {
                 logger.debug("Finding a random port for gossiping.");
                 utils.getFreePort(function(err, port) {
-                    config['gossipPort'] = port;
+                    config.gossipPort = port;
                     logger.debug("Using port " + port + " for gossiping.");
                     done();
                 });
@@ -126,10 +126,10 @@ module.exports = {
         }
 
         function getDataPort(done) {
-            if (!config['dataPort']) {
+            if (!config.dataPort) {
                 logger.debug("Finding a random port for data.");
                 utils.getFreePort(function(err, port) {
-                    config['dataPort'] = port;
+                    config.dataPort = port;
                     logger.debug("Using port " + port + " for data.");
                     done();
                 });
@@ -141,7 +141,7 @@ module.exports = {
         getGossipPort(function() {
             getDataPort(function() {
                 utils.getIp(function(err, ip) {
-                    config['ip'] = ip;
+                    config.ip = ip;
                     connect(config, cb);
                 });
             });
@@ -158,26 +158,31 @@ module.exports = {
     shutdown: function (cb) {
         shuttingDown = true;
 
+        var i = 0;
+        var keys = [];
+
+        var done = function() {
+            if(i == (keys.length - 1)) {
+                if(typeof cb === 'function') cb();
+            }
+        };
+
         gossiper.shutdown(function() {
             discovery.shutdown(function() {
-                var keys = Object.keys(db.members);
-                for (var i = 0; i < keys.length; i++) {
-                    db.members[keys[i]].shutdown(function() {
-                        if(i == (keys.length - 1)) {
-                            typeof cb === 'function' && cb();
-                        }
-                    });
+                keys = Object.keys(db.members);
+                for (i = 0; i < keys.length; i++) {
+                    db.members[keys[i]].shutdown(done);
                 }
             });
         });
     },
 
     send: function (obj) {
-        var topic = obj['topic'];
-        var partition = 'partition' in obj ? obj['partition'] : '.*';
-        var message = obj['message'];
-        var type = 'type' in obj ? obj['type'] : '';
-        var offsetMilliseconds = 'offset' in obj ? obj['offset'] : '0';
+        var topic = obj.topic;
+        var partition = 'partition' in obj ? obj.partition : '.*';
+        var message = obj.message;
+        var type = 'type' in obj ? obj.type : '';
+        var offsetMilliseconds = 'offset' in obj ? obj.offset : '0';
 
         var envelope = {};
 
@@ -196,20 +201,22 @@ module.exports = {
         envelope.encrypted = false;
 
         var delivery = deliveries[topic];
-        if (delivery == undefined) {
+        if (delivery === undefined) {
             delivery = DeliveryType.BROADCAST;
             deliveries[topic] = delivery;
         }
 
+        var index, member;
+
         if(delivery === DeliveryType.ROUND_ROBIN) {
 
-            if (!(db.getRegisteredMembers(topic).length <= 0)) {
+            if (db.getRegisteredMembers(topic).length > 0) {
 
-                var index = (roundRobinIndex.get(topic) + 1) %
+                index = (roundRobinIndex.get(topic) + 1) %
                     db.getRegisteredMembers(topic).size();
                 roundRobinIndex[topic] = index;
 
-                var member = db.getRegisteredMembers(topic).get(index);
+                member = db.getRegisteredMembers(topic).get(index);
 
                 if (me.equals(member)) {
                     envelope.payload = message;
@@ -224,9 +231,9 @@ module.exports = {
         } else if(delivery === DeliveryType.RANDOM) {
 
             if (!db.getRegisteredMembers(topic).isEmpty()) {
-                var index = Math.random() * db.getRegisteredMembers(topic).size();
+                index = Math.random() * db.getRegisteredMembers(topic).size();
 
-                var member = db.getRegisteredMembers(topic).get(index);
+                member = db.getRegisteredMembers(topic).get(index);
 
                 if (me.equals(member)) {
                     envelope.payload = message;
@@ -250,17 +257,17 @@ module.exports = {
             }
 
             for (var key in members) {
-                var member = members[key].member;
+                member = members[key].member;
                 member.send(envelope);
             }
         }
     },
 
     addListener: function (obj) {
-        var topic = obj['topic'];
-        var partition = 'partition' in obj ? obj['partition'] : '.*';
-        var consumer = obj['listener'];
-        var template = 'template' in obj ? obj['template'] : undefined;
+        var topic = obj.topic;
+        var partition = 'partition' in obj ? obj.partition : '.*';
+        var consumer = obj.listener;
+        var template = 'template' in obj ? obj.template : undefined;
 
         db.registerMemberForTopic(topic, partition, me);
         db.addLocalListener(topic, partition, consumer, template);
@@ -292,11 +299,11 @@ module.exports = {
             roundRobinIndex[topic] = 0;
         }
     }
-}
+};
 
 var connect = function(config, cb) {
 
-    if('udp' === config['protocol']) {
+    if('udp' === config.protocol) {
         logger.info("Running over UDP");
     } else {
         logger.info("Running over TCP");
@@ -317,14 +324,14 @@ var connect = function(config, cb) {
             cb();
         });
     });
-}
+};
 
 var handleGossipMessage = function(message) {
     if(shuttingDown) {
         return;
     }
 
-    var senderKey = message.ip + ":" + message.gossipPort + ":" + message.dataPort
+    var senderKey = message.ip + ":" + message.gossipPort + ":" + message.dataPort;
     var updateTags = false;
 
     var memberKeys = Object.keys(message.members);
@@ -334,8 +341,8 @@ var handleGossipMessage = function(message) {
         var key = message.members[index];
         var m = db.members[key];
 
-        if(m == undefined) {
-            var protocol = config['protocol'];
+        if(m === undefined) {
+            var protocol = config.protocol;
             if("udp" == protocol) {
                 logger.debug("Discovered new UDP member through gossip: " + message.ip + ":" + message.gossipPort + ":" + message.dataPort);
             } else {
@@ -346,7 +353,7 @@ var handleGossipMessage = function(message) {
             m.ip = values[0];
             m.gossipPort = values[1];
             m.dataPort = values[2];
-            if(message.publicKey != undefined) {
+            if(message.publicKey !== undefined) {
                 m.setPublicKey(message.getPublicKey());
             }
             m.initialize();
@@ -381,7 +388,7 @@ var handleGossipMessage = function(message) {
             }
             db.removeRegistrations(toRemove);
 
-            for(var indx in topics) {
+            for(indx in topics) {
                 var topic = utils.getTopic(topics[indx]);
                 var partition = utils.getPartition(topics[indx]);
 
@@ -401,10 +408,10 @@ var handleGossipMessage = function(message) {
     }
 
     if(updateTags) {
-        var m = db.getMember(senderKey);
-        m.tags = [];
+        var tagMember = db.getMember(senderKey);
+        tagMember.tags = [];
         for(var tag in message.tags) {
-            m.tags.push(tag);
+            tagMember.tags.push(tag);
         }
     }
-}
+};

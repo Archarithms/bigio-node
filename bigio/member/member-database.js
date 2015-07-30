@@ -27,7 +27,7 @@
  * either expressed or implied, of the FreeBSD Project.
  */
 
-var logger = require('winston')
+var logger = require('winston');
 var events = require('events');
 var MemberStatus = require('./member-status');
 var utils = require('../utils');
@@ -55,7 +55,7 @@ module.exports = {
      * @param interceptor an interceptor.
      */
     addInterceptor: function(topic, interceptor) {
-        if(this.interceptors[topic] == undefined) {
+        if(this.interceptors[topic] === undefined) {
             this.interceptors[topic] = [];
         }
         this.interceptors[topic].push(interceptor);
@@ -104,10 +104,10 @@ module.exports = {
     removeAllLocalListeners: function(topic) {
         var allRegs = this.map[me];
 
-        if(allRegs != undefined) {
+        if(allRegs !== undefined) {
             var regs = allRegs[topic];
 
-            if(regs != undefined) {
+            if(regs !== undefined) {
                 logger.debug("Removing " + regs.size() + " registration");
                 regs.clear();
             } else {
@@ -183,11 +183,11 @@ module.exports = {
 
         var memberKey = member.ip + ':' + member.gossipPort + ':' + member.dataPort;
 
-        if(this.map[memberKey] == undefined) {
+        if(this.map[memberKey] === undefined) {
             this.map[memberKey] = {};
         }
 
-        if(this.map[memberKey][topic] == undefined) {
+        if(this.map[memberKey][topic] === undefined) {
             this.map[memberKey][topic]  = [];
         }
 
@@ -203,11 +203,11 @@ module.exports = {
         }
 
         if(!found) {
-            var reg = {};
-            reg.member = member;
-            reg.topic = String(topic);
-            reg.partition = String(partition);
-            this.map[memberKey][topic].push(reg);
+            var newReg = {};
+            newReg.member = member;
+            newReg.topic = String(topic);
+            newReg.partition = String(partition);
+            this.map[memberKey][topic].push(newReg);
         }
     },
 
@@ -283,10 +283,7 @@ module.exports = {
         var key = member.ip + ":" + member.gossipPort + ":" + member.dataPort;
 
         if(key in this.members) {
-            if(key in this.activeMembers
-                    && (member.status == MemberStatus.Failed
-                    || member.status == MemberStatus.Left
-                    || member.status == MemberStatus.Unknown)) {
+            if(key in this.activeMembers && (member.status == MemberStatus.Failed || member.status == MemberStatus.Left || member.status == MemberStatus.Unknown)) {
                 delete this.activeMembers[key];
                 this.deadMembers[key] = member;
             } else if(key in this.deadMembers && member.status == MemberStatus.Alive) {

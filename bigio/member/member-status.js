@@ -29,6 +29,6 @@
 
 var MemberStatus = {
     Alive : 0, Left : 1, Failed : 2, Unknown : 3
-}
+};
 
 module.exports = MemberStatus;
