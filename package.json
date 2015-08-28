@@ -1,6 +1,6 @@
 {
     "name": "bigio",
-    "version": "0.1.10",
+    "version": "0.1.11",
     "description": "Distributed messaging for NodeJS.",
     "homepage": "http://bigio.io",
     "license": "BSD-3-Clause",

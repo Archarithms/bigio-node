@@ -195,9 +195,8 @@ RemoteMember.prototype.initialize = function() {
  * @param {Object} envelope an envelope.
  */
 RemoteMember.prototype.send = function(message) {
-    console.log(message);
     var bytes = envelopeCodec.encode(message);
-    this.dataClient.send(bytes, 0, bytes.length, this.dataPort, this.ip);
+    this.dataClient.write(bytes, 0, bytes.length, this.dataPort, this.ip);
 };
 
 /**
@@ -207,7 +206,7 @@ RemoteMember.prototype.send = function(message) {
 RemoteMember.prototype.gossip = function(message) {
     if (this.gossipConnected) {
         var bytes = gossipCodec.encode(message);
-        this.gossipSocket.send(bytes, 0, bytes.length, this.gossipPort, this.ip);
+        this.gossipSocket.write(bytes, 0, bytes.length, this.gossipPort, this.ip);
     }
 };
 
