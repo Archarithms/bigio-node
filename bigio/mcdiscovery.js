@@ -34,6 +34,7 @@ var MemberStatus = require('./member/member-status');
 var RemoteMember = require('./member/you');
 var utils = require('./utils');
 var dgram = require('dgram');
+var ursa = require('ursa');
 
 var me;
 var server;
@@ -72,8 +73,8 @@ module.exports = {
                 member = new RemoteMember(message.ip, message.gossipPort, message.dataPort, config);
                 member.status = MemberStatus.Alive;
 
-                if (message.publicKey !== undefined) {
-                    member.publicKey = message.publicKey;
+                if(message.publicKey !== undefined) {
+                    member.keyPair = ursa.openSshPublicKey(message.publicKey, 'utf8');
                 }
 
                 member.initialize();
@@ -114,6 +115,7 @@ module.exports = {
         enabled = config.useMulticast;
         multicastGroup = config.multicastGroup;
         multicastPort = config.multicastPort;
+        multicastTTL = config.multicastTTL;
         protocol = config.protocol;
         nic = config.nic;
 

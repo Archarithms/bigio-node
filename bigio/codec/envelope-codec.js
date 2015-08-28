@@ -65,11 +65,13 @@ module.exports = {
         message.senderKey = ip + ':' + gossipPort + ':' + dataPort;
 
         var encrypted = unpacked[index++];
-        message.isEncrypted = encrypted;
 
-        if(encrypted === "true") {
+        if(encrypted) {
             logger.info("Message encrypted");
             message.key = unpacked[index++];
+            message.encrypted = true;
+        } else {
+            message.encrypted = false;
         }
 
         message.executeTime = unpacked[index++];
@@ -99,7 +101,7 @@ module.exports = {
         var ip = keys[0].split('.');
         var toPack;
 
-        if(message.isEncrypted) {
+        if(message.encrypted) {
             toPack = [
                 msgpack.encode(parseInt(ip[0])),
                 msgpack.encode(parseInt(ip[1])),

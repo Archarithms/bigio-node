@@ -188,10 +188,6 @@ RemoteMember.prototype.initialize = function() {
         });
         this.dataClient.bind(this.dataPort, this.ip);
     }
-
-    if(this.publicKey !== undefined) {
-
-    }
 };
 
 /**
@@ -199,6 +195,7 @@ RemoteMember.prototype.initialize = function() {
  * @param {Object} envelope an envelope.
  */
 RemoteMember.prototype.send = function(message) {
+    console.log(message);
     var bytes = envelopeCodec.encode(message);
     this.dataClient.send(bytes, 0, bytes.length, this.dataPort, this.ip);
 };

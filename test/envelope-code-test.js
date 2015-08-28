@@ -11,7 +11,7 @@ describe('envelope-codec', function() {
         envelope.millisecondsSinceMidnight = utils.getMillisecondsSinceMidnight();
         envelope.topic = 'TestTopic';
         envelope.partition = 'TestPartition';
-        envelope.isEncrypted = false;
+        envelope.encrypted = false;
         envelope.type = 'class';
         envelope.payload = bops.from('');
 
@@ -23,7 +23,7 @@ describe('envelope-codec', function() {
         assert.equal(envelope.millisecondsSinceMidnight, decoded.millisecondsSinceMidnight);
         assert.equal(envelope.topic, decoded.topic);
         assert.equal(envelope.partition, decoded.partition);
-        assert.equal(envelope.isEncrypted, decoded.isEncrypted);
+        assert.equal(envelope.encrypted, decoded.encrypted);
         assert.equal(envelope.type, decoded.type);
     });
 });

@@ -28,7 +28,9 @@
  */
 
 var logger = require('winston');
+var crypto = require('crypto');
 var events = require('events');
+var ursa = require('ursa');
 var MemberStatus = require('./member-status');
 var db = require('./member-database');
 var envelopeCodec = require('../codec/envelope-codec');
@@ -60,6 +62,11 @@ var MeMember = function(config) {
     this.certChainFile = config.certChainFile;
     this.keyFile = config.keyFile;
     this.keyPassword = config.keyFilePassword;
+
+    if(this.useEncryption) {
+        this.keyPair = ursa.generatePrivateKey(1024, 65537);
+        this.publicKey = this.keyPair.toPublicSsh();
+    }
 };
 
 MeMember.prototype.tags = {};
@@ -286,10 +293,6 @@ MeMember.prototype.initialize = function(cb) {
 
         dataServer.bind(this.dataPort, this.ip);
     }
-
-    if(this.useEncryption) {
-        logger.info("Requiring encrypted message traffic.");
-    }
 };
 
 /**
@@ -307,8 +310,14 @@ MeMember.prototype.addGossipConsumer = function(consumer) {
 MeMember.prototype.send = function(envelope) {
     if(!envelope.decoded) {
         if(envelope.encrypted) {
-            log.error('Encrypted messages not supported yet.');
+            var decryptedKey = new Buffer(this.keyPair.decrypt(envelope.key, 'base64', 'hex'), 'hex');
+            var iv = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            var decipher = crypto.createDecipheriv("aes-256-cbc", decryptedKey, (new Buffer(iv)));
+            var decrypted = decipher.update(envelope.payload, 'base64', 'hex');
+            decrypted += decipher.final('hex');
+            envelope.payload = new Buffer(decrypted, 'hex');
         }
+
 
         // decode message
         envelope.message = genericCodec.decode(envelope.payload);

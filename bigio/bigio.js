@@ -36,6 +36,8 @@ var discovery = require('./mcdiscovery');
 var db = require('./member/member-database');
 var gossiper = require('./gossiper');
 var genericCodec = require('./codec/generic-codec');
+var crypto = require('crypto');
+var ursa = require('ursa');
 
 var me;
 
@@ -64,12 +66,14 @@ var defaultConfiguration = {
     useMulticast: true,
     multicastGroup: '239.0.0.1',
     multicastPort: 8989,
+    multicastTTL: 2,
     gossipInterval: 250,
     cleanupInterval: 10000,
     logLevel: 'info'
 };
 
 var config;
+var symmetricKey, symmetricCipher, iv;
 
 module.exports = {
 
@@ -145,6 +149,14 @@ module.exports = {
                 });
             });
         });
+
+        if(config.encrypt) {
+            logger.info("Requiring encrypted message traffic.");
+            symmetricKey = crypto.randomBytes(32);
+            iv = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            //iv = crypto.randomBytes(16);
+            symmetricCipher = crypto.createCipheriv("aes-256-cbc", (new Buffer(symmetricKey)), (new Buffer(iv)));
+        }
 
         process.on('SIGINT', function() {
             logger.info("Goodbye");
@@ -225,7 +237,6 @@ module.exports = {
         envelope.topic = topic;
         envelope.partition = partition;
         envelope.type = type;
-        envelope.encrypted = false;
 
         var delivery = deliveries[topic];
         if (delivery === undefined) {
@@ -275,15 +286,8 @@ module.exports = {
         } else if(delivery == DeliveryType.BROADCAST) {
             var members = db.getRegisteredMembers(topic);
 
-            if (me.equals(member)) {
-                envelope.payload = message;
-                envelope.decoded = true;
-            } else {
-                envelope.payload = genericCodec.encode(message);
-                envelope.decoded = false;
-            }
-
             for (var key in members) {
+                setupPayload(members[key].member, envelope, message);
                 member = members[key].member;
                 member.send(envelope);
             }
@@ -392,7 +396,7 @@ var handleGossipMessage = function(message) {
             m.gossipPort = values[1];
             m.dataPort = values[2];
             if(message.publicKey !== undefined) {
-                m.setPublicKey(message.getPublicKey());
+                m.keyPair = ursa.openSshPublicKey(message.publicKey, 'utf8');
             }
             m.initialize();
             m.status = MemberStatus.Alive;
@@ -453,3 +457,27 @@ var handleGossipMessage = function(message) {
         }
     }
 };
+
+function setupPayload(member, envelope, message) {
+    /* if (me.equals(member)) {
+        envelope.message = message;
+        envelope.decoded = true;
+        envelope.encrypted = false;
+    } else { */
+        envelope.payload = genericCodec.encode(message);
+
+        if(config.encrypt) {
+            var encrypted = symmetricCipher.update(envelope.payload, 'utf8', 'base64');
+            encrypted += symmetricCipher.final('base64');
+
+            envelope.payload = encrypted;
+            envelope.encrypted = true;
+            var enc = member.keyPair.encrypt(symmetricKey, 'base64', 'base64');
+            envelope.key = enc;
+        } else {
+            envelope.encrypted = false;
+        }
+
+        envelope.decoded = false;
+    //}
+}
