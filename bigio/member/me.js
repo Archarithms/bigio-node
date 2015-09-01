@@ -30,7 +30,6 @@
 var logger = require('winston');
 var crypto = require('crypto');
 var events = require('events');
-var ursa = require('ursa');
 var MemberStatus = require('./member-status');
 var db = require('./member-database');
 var envelopeCodec = require('../codec/envelope-codec');
@@ -64,6 +63,7 @@ var MeMember = function(config) {
     this.keyPassword = config.keyFilePassword;
 
     if(this.useEncryption) {
+        var ursa = require('ursa');
         this.keyPair = ursa.generatePrivateKey(1024, 65537);
         this.publicKey = this.keyPair.toPublicSsh();
     }

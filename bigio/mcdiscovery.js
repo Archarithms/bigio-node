@@ -34,7 +34,6 @@ var MemberStatus = require('./member/member-status');
 var RemoteMember = require('./member/you');
 var utils = require('./utils');
 var dgram = require('dgram');
-var ursa = require('ursa');
 
 var me;
 var server;
@@ -74,6 +73,7 @@ module.exports = {
                 member.status = MemberStatus.Alive;
 
                 if(message.publicKey !== undefined) {
+                    var ursa = require('ursa');
                     member.keyPair = ursa.openSshPublicKey(message.publicKey, 'utf8');
                 }
 

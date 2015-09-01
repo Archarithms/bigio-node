@@ -1,6 +1,6 @@
 {
     "name": "bigio",
-    "version": "0.1.11",
+    "version": "0.1.12",
     "description": "Distributed messaging for NodeJS.",
     "homepage": "http://bigio.io",
     "license": "BSD-3-Clause",
@@ -19,8 +19,7 @@
         "bl": "^0.9.4",
         "bops": "~0.1.1",
         "msgpack5": "^2.3.0",
-        "winston": "~0.8.3",
-        "ursa": "latest"
+        "winston": "~0.8.3"
     },
     "devDependencies": {
         "debug": "~2.0.0",

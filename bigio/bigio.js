@@ -37,7 +37,6 @@ var db = require('./member/member-database');
 var gossiper = require('./gossiper');
 var genericCodec = require('./codec/generic-codec');
 var crypto = require('crypto');
-var ursa = require('ursa');
 
 var me;
 
@@ -396,6 +395,7 @@ var handleGossipMessage = function(message) {
             m.gossipPort = values[1];
             m.dataPort = values[2];
             if(message.publicKey !== undefined) {
+                var ursa = require('ursa');
                 m.keyPair = ursa.openSshPublicKey(message.publicKey, 'utf8');
             }
             m.initialize();
