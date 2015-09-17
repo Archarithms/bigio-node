@@ -51,8 +51,13 @@ module.exports = {
 
     setupNetworking: function(cb) {
 
-        server = dgram.createSocket('udp4');
-        client = dgram.createSocket('udp4');
+        var opt = {
+            type: 'udp4',
+            reuseAddr: true
+        };
+
+        server = dgram.createSocket(opt);
+        client = dgram.createSocket(opt);
 
         client.on('message', function (data, rinfo) {
 
