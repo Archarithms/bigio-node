@@ -68,7 +68,6 @@ var defaultConfiguration = {
     multicastTTL: 2,
     gossipInterval: 250,
     cleanupInterval: 10000,
-    network: 'lo'
     logLevel: 'info'
 };
 

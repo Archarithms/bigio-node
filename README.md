@@ -110,7 +110,30 @@ bigio.initialize(function() {
 </html>
 ```
 
+#### Configuration
+
+To override the default configuration, add a configuration object to the `initialize()` function:
+
+```javascript
+const config = {
+  protocol: 'tcp',
+  useMulticast: true,
+  multicastGroup: '239.0.0.1',
+  multicastPort: 8989,
+  logLevel: 'debug',
+  network: 'wlan0',
+};
+
+bigio.initialize(config, function() {
+  // ...
+});
+```
+
+
 ## What's New
+#### 0.1.14
+- Added configuration option to specify the network
+
 #### 0.1.13
 - Fixed port reuse issue
 
@@ -122,17 +145,17 @@ bigio.initialize(function() {
 - Refactored into fewer files
 - Numerous bug fixes
 
-#### 0.1.8 
+#### 0.1.8
 - Better error handling
 
-#### 0.1.7 
+#### 0.1.7
 - Critical bug fix
 
-#### 0.1.6 
+#### 0.1.6
 - Bug fixes on Mac and Linux
 
-#### 0.1.5 
+#### 0.1.5
 - Critical bug fixes
 
-#### 0.1.4 
+#### 0.1.4
 - Interoperability with Java BigIO
