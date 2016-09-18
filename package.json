@@ -1,28 +1,37 @@
 {
-    "name": "bigio",
-    "version": "0.1.14",
-    "description": "Distributed messaging for NodeJS.",
-    "homepage": "http://bigio.io",
-    "license": "BSD-3-Clause",
-    "author": {
-        "name": "Andrew Trimble",
-        "email": "andrew.trimble@archarithms.com"
-    },
-    "keywords" : [ "messaging", "distributed", "messages", "java" ],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/Archarithms/bigio-node"
-    },
-    "private": false,
-    "main": "./bigio/bigio",
-    "dependencies": {
-        "bl": "^0.9.4",
-        "bops": "~0.1.1",
-        "msgpack5": "^2.3.0",
-        "winston": "~0.8.3"
-    },
-    "devDependencies": {
-        "debug": "~2.0.0",
-        "chai": "~3.2.0"
-    }
+  "name": "bigio",
+  "version": "0.1.14",
+  "description": "Distributed messaging for NodeJS.",
+  "homepage": "http://bigio.io",
+  "license": "BSD-3-Clause",
+  "author": {
+    "name": "Andrew Trimble",
+    "email": "andrew.trimble@archarithms.com"
+  },
+  "keywords": [
+    "messaging",
+    "distributed",
+    "messages",
+    "java"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Archarithms/bigio-node"
+  },
+  "private": false,
+  "main": "./bigio/bigio",
+  "scripts": {
+    "test": "node_modules/mocha/bin/mocha test/*"
+  },
+  "dependencies": {
+    "bl": "^1.1.2",
+    "bops": "~1.0.0",
+    "msgpack5": "^3.4.0",
+    "winston": "~2.2.0"
+  },
+  "devDependencies": {
+    "chai": "~3.2.0",
+    "debug": "~2.0.0",
+    "mocha": "^3.0.2"
+  }
 }
