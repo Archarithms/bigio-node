@@ -101,41 +101,40 @@ module.exports = {
     },
 
     getIp: function (cb) {
-      if (ip === undefined) {
-        var match;
-        var interfaces = os.networkInterfaces();
-        if (config.network === undefined) {
-          switch (currentOS()) {
-          case OperatingSystem.WIN_64:
-          case OperatingSystem.WIN_32:
-            match = "Loopback";
-            break;
-          case OperatingSystem.LINUX_64:
-          case OperatingSystem.LINUX_32:
-            match = "lo";
-            break;
-          case OperatingSystem.MAC_64:
-          case OperatingSystem.MAC_32:
-            match = "lo0";
-            break;
-          default:
-            logger.error("Cannot determine operating system. Cluster cannot form.");
-          }
-        } else {
-          match = config.network;
-        }
-        for (var intfc in interfaces) {
-          if (intfc.indexOf(match) > -1) {
-            for (var i in interfaces[intfc]) {
-              if (interfaces[intfc][i].family == 'IPv4') {
-                ip = interfaces[intfc][i].address;
-              }
+        if (ip === undefined) {
+            var match;
+            var interfaces = os.networkInterfaces();
+            if (config.network === undefined) {
+                switch (currentOS()) {
+                case OperatingSystem.WIN_64:
+                case OperatingSystem.WIN_32:
+                    match = "Loopback";
+                    break;
+                case OperatingSystem.LINUX_64:
+                case OperatingSystem.LINUX_32:
+                    match = "lo";
+                    break;
+                case OperatingSystem.MAC_64:
+                case OperatingSystem.MAC_32:
+                    match = "lo0";
+                    break;
+                default:
+                    logger.error("Cannot determine operating system. Cluster cannot form.");
+                }
+            } else {
+                match = config.network;
             }
-          }
+            for (var intfc in interfaces) {
+                if (intfc.indexOf(match) > -1) {
+                    for (var i in interfaces[intfc]) {
+                        if (interfaces[intfc][i].family == 'IPv4') {
+                            ip = interfaces[intfc][i].address;
+                        }
+                    }
+                }
+            }
         }
-      }
-
-      cb(null, ip);
+        cb(null, ip);
     },
 
     getFreePort: function(cb) {
